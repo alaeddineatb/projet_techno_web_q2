@@ -1,0 +1,50 @@
+body {
+  background-image: url('gaming.jpg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  font-family: Arial, sans-serif;
+}
+
+  
+  h1 {
+    color: rgb(107, 106, 179);
+    text-align: center;
+  }
+  
+  form {
+    background-color: transparent;
+    border: none;                 
+    width: 300px;
+    margin: 50px auto;
+    padding: 20px;
+  }
+  
+  
+  label {
+    font-weight: bold;
+    display: block;
+    margin-top: 10px;
+    color: rgb(95, 94, 154);
+  }
+  
+  input[type="text"],
+  input[type="password"] {
+    width: 100%;
+    padding: 5px;
+    margin-top: 5px;
+    margin-bottom: 10px;
+    background-color: transparent;
+    color: rgb(235, 235, 243);
+  }
+  
+  input[type="submit"] {
+    width: 100%;
+    padding: 10px;
+    background-color: rgb(75, 83, 141);
+    color: white;
+    border: none;
+    cursor: pointer;
+    background-position: center;
+  }
+  
