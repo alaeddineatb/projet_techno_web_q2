@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap');
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0 auto;
+    font-family: 'Poppins', sans-serif; 
+    max-width: 1200px; 
+    display: flex;
+    align-items: center;
+    padding: 20px;
+    background: url('../images/imgf.webp');
+}
+
+header.header img {
+    width: 150px;
+}
+
+section.top-page {
+   
+    background-size: cover;
+    height: 80vh;
+    padding: 25px;
+}
+
+/* Landing page */
+.big-title {
+    color: white;
+    font-size: 50px;
+    padding: 20px 50px;
+    font-family: 'Poppins', sans-serif; 
+    font-weight: 700; 
+    text-transform: uppercase; 
+}
+
+/* Menu de navigation */
+header.header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 130px; }
+
+nav.nav {
+    display: flex;
+    justify-content: space-between;
+    list-style: none;
+    width: 400px;
+    margin-left: 30px;
+
+}
+
+nav.nav li {
+    color: white;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400; 
+    padding: 10px 15px; 
+    border-radius: 5px; 
+    transition: background-color 0.3s ease; 
+}
+nav.nav li:hover {
+    background-color: rgba(0, 0, 0, 0.5); /* Fond noir semi-transparent */
+    cursor: pointer; /* Change le curseur en pointeur */
+}
+
+
+/* Titre principal (slogan) */
+.big-title {
+    color: white;
+    font-size: 40px; /* Taille réduite pour un slogan */
+    padding: 20px 50px;
+    font-family: 'Poppins', sans-serif;
+    font-weight: 700;
+    text-transform: uppercase;
+    background-color: rgba(0, 0, 0, 0.5); /* Fond semi-transparent */
+    border-radius: 10px; /* Coins arrondis */
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5); /* Ombre portée */
+    letter-spacing: 2px; /* Espacement des lettres */
+    line-height: 1.5; /* Hauteur de ligne */
+}
