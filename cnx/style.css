@@ -1,0 +1,26 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: url('images/img.avif') no-repeat center center/cover; /* Remplacez par une image gaming */
+    color: white;
+}
+
+
+.wrapper {
+    width: 400px;
+    background: rgba(0, 0, 0, 0.7); /* Fond semi-transparent sombre */
+    padding: 30px;
+    border-radius: 10px;
+    border: 3px solid #ff5722; /* Cadre orange autour de .wrapper */
+    box-shadow: 0 0 20px rgba(255, 87, 34, 0.5); /* Ombre pour un effet plus dynamique */
+    text-align: center;
+}
