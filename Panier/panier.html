@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Cart - GamerZone</title>
+    <link rel="stylesheet" href="panier.css">
+    <link rel="stylesheet" href="panier.css">
+</head>
+<body>
+    <div class="header">
+        <h1>🎮 GamerZone 🎮</h1>
+        <nav id="nav-links">
+            <a href="index.html">Home</a>
+            <a href="browse.html">Browse Games</a>
+            <a href="profile.html">My Profile</a>
+            <a href="cart.html">My Cart</a>
+            <a href="#" id="logout-link">Logout</a>
+        </nav>
+    </div>
+
+    <div class="container">
+        <h2>Your Shopping Cart</h2>
+        
+        <div class="cart-items">
+            <div class="cart-item">
+                <div class="game-image" style="background-color: #333;"></div>
+                <div class="item-details">
+                    <h3>Cyber Odyssey</h3>
+                    <p>Action RPG | PC, PlayStation, Xbox</p>
+                    <p class="price">$59.99</p>
+                </div>
+                <div class="item-actions">
+                    <button class="quantity-btn">-</button>
+                    <span class="quantity">1</span>
+                    <button class="quantity-btn">+</button>
+                    <button class="remove-btn">Remove</button>
+                </div>
+            </div>
+            
+            <div class="cart-item">
+                <div class="game-image" style="background-color: #333;"></div>
+                <div class="item-details">
+                    <h3>Galaxy Commander</h3>
+                    <p>Strategy | PC, Mobile</p>
+                    <p class="price">$39.99</p>
+                </div>
+                <div class="item-actions">
+                    <button class="quantity-btn">-</button>
+                    <span class="quantity">1</span>
+                    <button class="quantity-btn">+</button>
+                    <button class="remove-btn">Remove</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="cart-summary">
+            <div class="summary-details">
+                <h3>Order Summary</h3>
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span>$99.98</span>
+                </div>
+                <div class="summary-row">
+                    <span>Tax:</span>
+                    <span>$12.00</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Total:</span>
+                    <span>$111.98</span>
+                </div>
+            </div>
+            <button class="btn checkout-btn">Proceed to Checkout</button>
+        </div>
+        
+        <div class="recommendations">
+            <h3>You Might Also Like</h3>
+            <div class="game-row">
+                <div class="game-card">
+                    <div class="game-image" style="background-color: #333;"></div>
+                    <h3>Mystic Lands</h3>
+                    <p>MMORPG | 2024</p>
+                    <p>PC</p>
+                    <button class="btn small-btn">Add to Cart</button>
+                </div>
+                <div class="game-card">
+                    <div class="game-image" style="background-color: #333;"></div>
+                    <h3>Speed Demons</h3>
+                    <p>Racing | 2025</p>
+                    <p>PlayStation, Xbox, PC</p>
+                    <button class="btn small-btn">Add to Cart</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        <p>&copy; 2025 GamerZone. All rights reserved.</p>
+        <div class="social-links">
+            <a href="#">Facebook</a>
+            <a href="#">Twitter</a>
+            <a href="#">Discord</a>
+        </div>
+    </div>
+
+    <script src="panier.js"></script>
+    <script src="./panier.js"></script>
+</body>
+</html>
