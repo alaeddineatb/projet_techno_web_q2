@@ -1,0 +1,72 @@
+.game-container {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.game-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+
+.game-actions {
+    display: flex;
+    gap: 15px;
+}
+
+.btn-primary {
+    padding: 10px 20px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.btn-secondary {
+    padding: 10px 20px;
+    background-color: #2196F3;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.game-details {
+    display: flex;
+    gap: 30px;
+    margin-bottom: 40px;
+}
+
+.game-image {
+    flex: 1;
+}
+
+.game-image img {
+    width: 100%;
+    border-radius: 5px;
+}
+
+.game-info {
+    flex: 2;
+}
+
+.game-description {
+    margin-top: 20px;
+}
+
+.rating-section {
+    margin-top: 30px;
+}
+
+.stars span {
+    font-size: 24px;
+    color: #ddd;
+    cursor: pointer;
+}
+
+.stars span.active {
+    color: #FFD700;
+}
