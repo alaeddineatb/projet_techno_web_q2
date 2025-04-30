@@ -1,0 +1,56 @@
+
+
+<!DOCTYPE html>
+<html lang="fr">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Détails du Jeu - HustleWeb</title>
+    <link rel="stylesheet" href="/static/css/games.css">
+    <link rel="stylesheet" href="/static/css/global.css">
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <h1 id="game-title">Titre du Jeu</h1>
+            <div class="game-actions">
+                <button id="purchase-btn" class="btn-primary">Acheter</button>
+                <button id="forum-btn" class="btn-secondary">Forum</button>
+            </div>
+        </div>
+
+        <div class="game-details">
+            <div class="game-image">
+                <img id="game-img" src="/static/img/placeholder.jpg" alt="Image du jeu">
+            </div>
+            <div class="game-info">
+                <p><strong>Éditeur:</strong> <span id="game-publisher"></span></p>
+                <p><strong>Catégorie:</strong> <span id="game-category"></span></p>
+                <p><strong>Prix:</strong> <span id="game-price"></span> €</p>
+                <p><strong>Note moyenne:</strong> <span id="game-rating"></span>/5</p>
+                <div class="game-description">
+                    <h3>Description</h3>
+                    <p id="game-description"></p>
+                </div>
+            </div>
+        </div>
+
+        <div class="rating-section">
+            <h3>Noter ce jeu</h3>
+            <div class="stars" id="rating-stars">
+                <span data-value="1">★</span>
+                <span data-value="2">★</span>
+                <span data-value="3">★</span>
+                <span data-value="4">★</span>
+                <span data-value="5">★</span>
+            </div>
+            <button id="submit-rating">Soumettre</button>
+        </div>
+    </div>
+
+    <script type="module" src="/static/js/games.js"></script>
+    <script type="module" src="/static/js/games-data.js"></script>
+
+</body>
+</html>
