@@ -1,10 +1,9 @@
-// ratings.js - Version compatible avec le backend
 document.addEventListener('DOMContentLoaded', function() {
-    // Chargement initial
+
     populateGameFilter();
     loadRatings();
 
-    // Écouteurs d'événements
+// L
     document.getElementById('game-filter').addEventListener('change', loadRatings);
     document.getElementById('rating-filter').addEventListener('change', loadRatings);
 

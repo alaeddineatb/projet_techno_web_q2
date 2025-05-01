@@ -1,52 +1,122 @@
-.forgot-container {
-    max-width: 500px;
-    margin: 50px auto;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0,0,0,0.1);
+/* Cyberpunk Theme - Noir & Vert */
+body {
+    background: #0a0a0a;
+    font-family: 'Segoe UI', sans-serif;
+    color: #fff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 20px;
 }
 
-.forgot-container h1 {
+.forgot-container {
+    background: #111;
+    border: 2px solid #00ff88;
+    border-radius: 10px;
+    padding: 40px;
+    width: 100%;
+    max-width: 500px;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.2);
+}
+
+.forgot-container::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(45deg, transparent, #00ff8820, transparent);
+    transform: rotate(-45deg);
+    z-index: 0;
+}
+
+h1 {
+    color: #00ff88;
+    text-transform: uppercase;
+    letter-spacing: 2px;
     text-align: center;
     margin-bottom: 30px;
+    position: relative;
+    font-size: 2em;
 }
 
 .form-group {
-    margin-bottom: 20px;
+    margin-bottom: 25px;
+    position: relative;
 }
 
-.form-group label {
+label {
+    color: #00ff88;
+    margin-bottom: 8px;
     display: block;
-    margin-bottom: 5px;
-    font-weight: bold;
+    font-weight: 600;
 }
 
-.form-group input {
-    width: 100%;
-    padding: 10px;
-    border: 1px solid #ddd;
+input {
+    background: #1a1a1a;
+    border: 1px solid #333;
+    color: #fff;
+    padding: 12px 15px;
     border-radius: 5px;
-}
-
-button[type="submit"], #reset-password {
     width: 100%;
-    padding: 12px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+    transition: all 0.3s ease;
     font-size: 16px;
 }
 
+input:focus {
+    outline: none;
+    border-color: #00ff88;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.3);
+}
+
+button[type="submit"], #reset-password {
+    background: #00ff88;
+    color: #111;
+    border: none;
+    padding: 15px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 20px;
+    border-radius: 5px;
+}
+
+button[type="submit"]:hover, #reset-password:hover {
+    background: #00cc6a;
+    transform: translateY(-2px);
+}
+
 .back-link {
+    color: #00ff88;
+    text-decoration: none;
     display: block;
     text-align: center;
-    margin-top: 20px;
-    color: #2196F3;
-    text-decoration: none;
+    margin-top: 25px;
+    transition: color 0.3s ease;
+}
+
+.back-link:hover {
+    color: #00cc6a;
 }
 
 .hidden {
     display: none;
+}
+
+@media (max-width: 480px) {
+    .forgot-container {
+        padding: 25px;
+        margin: 15px;
+    }
+    
+    h1 {
+        font-size: 1.5em;
+    }
 }

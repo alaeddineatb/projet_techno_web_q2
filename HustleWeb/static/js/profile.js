@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function displayUserInfo() {
-    // À REMPLACER : On va récupérer les infos depuis le HTML généré par le backend
+
     const usernameElement = document.getElementById('profile-username');
     const profilePicElement = document.getElementById('profile-pic');
     
@@ -32,8 +32,8 @@ function setupPhotoUpload() {
 
             if (response.ok) {
                 const data = await response.json();
-                document.getElementById('profile-pic').src = data.photo_url;
-                // Supprime localStorage.setItem('profilePic', ...)
+                document.getElementById('profile-pic').src = data.photo_url + "?t=" + Date.now();
+        
             }
         } catch (error) {
             alert('Erreur lors de l\'upload');

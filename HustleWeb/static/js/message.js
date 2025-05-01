@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const userId = localStorage.getItem('userId');
     
     if (!gameId || !userId) {
-        window.location.href = '/games';
+        window.location.href = '/game';
         return;
     }
 

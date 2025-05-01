@@ -18,7 +18,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 
 
-# Fonctions utilitaires
+
 def get_db():
     """Générateur de session de base de données"""
     db = SessionLocal()
@@ -42,7 +42,7 @@ def create_jwt(user_id: int) -> str:
 
 
 def get_current_user(
-    token: str = Cookie(default=None, alias="token"),  # Supprime la dépendance "security"
+    token: str = Cookie(default=None, alias="token"),  
     db: Session = Depends(get_db)
 ) -> User:
     if not token:
@@ -73,7 +73,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Vérifie un mot de passe hashé"""
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
-# Opérations CRUD pour les utilisateurs
+
 def create_user(db: Session, username: str, email: str, password: str) -> Optional[User]:
     """Crée un nouvel utilisateur"""
     if db.query(User).filter((User.email == email) | (User.username == username)).first():
@@ -107,7 +107,7 @@ def get_user_by_id(db: Session, user_id: int) -> Optional[User]:
     """Récupère un utilisateur par son ID"""
     return db.query(User).filter(User.user_id == user_id).first()
 
-# Opérations CRUD pour les jeux
+
 def create_game(db: Session, title: str, description: str, price: float, 
                publisher: str, category: str, platforms: str) -> Game:
     game = Game(
@@ -134,7 +134,7 @@ def get_all_games(db: Session, skip: int = 0, limit: int = 100) -> List[Game]:
     """Récupère tous les jeux avec pagination"""
     return db.query(Game).offset(skip).limit(limit).all()
 
-# Opérations CRUD pour les achats
+
 def create_purchase(db: Session, user_id: int, game_id: int) -> Optional[Purchase]:
     """Crée un nouvel achat"""
     user = db.query(User).filter(User.user_id == user_id, User.is_banned == False).first()
@@ -164,7 +164,7 @@ def get_user_purchases(db: Session, user_id: int) -> List[Purchase]:
     """Récupère les achats d'un utilisateur"""
     return db.query(Purchase).filter(Purchase.user_id == user_id).all()
 
-# Opérations CRUD pour les messages
+
 def create_message(db: Session, user_id: int, game_id: int, content: str) -> Optional[Message]:
     """Crée un nouveau message"""
     # Vérifie si l'utilisateur a acheté le jeu
@@ -188,7 +188,7 @@ def get_game_messages(db: Session, game_id: int) -> List[Message]:
     """Récupère les messages d'un jeu"""
     return db.query(Message).filter(Message.game_id == game_id).order_by(Message.created_at).all()
 
-# Opérations d'administration
+
 def ban_user(db: Session, admin_id: int, user_id: int) -> bool:
     """Bannit un utilisateur"""
     admin = db.query(User).filter(User.user_id == admin_id, User.is_admin == True).first()

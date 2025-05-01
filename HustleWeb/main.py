@@ -5,24 +5,26 @@ from views import router as views_router
 from post import router as post_router
 from pathlib import Path
 from models import init_db
+import os 
 
 
-# Création de l'application
 app = FastAPI(title="HustleWeb", 
              description="Plateforme de jeux vidéo", 
              version="1.0.0")
 
-# Montage des routeurs
+
 app.include_router(views_router)
 app.include_router(post_router)
-
-# Configuration des fichiers statiques
-app.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Chemin DIRECT vers Hustle/
+STATIC_DIR = os.path.join(BASE_DIR, "static")
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+print("[DEBUG] Chemin static :", STATIC_DIR)  
+print("[DEBUG] Chemin static :", os.path.abspath("static/css/forgot.css"))
 init_db()
 
 if __name__ == "__main__":
     uvicorn.run("main:app", 
                host="0.0.0.0", 
                port=8000, 
-               reload=True,  # Activation du rechargement automatique en développement
+               reload=True, 
                log_level="info")

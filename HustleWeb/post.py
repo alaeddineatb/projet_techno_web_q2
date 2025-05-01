@@ -5,6 +5,7 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 import random
 import datetime
+import os
 from datetime import timedelta, timezone,datetime
 from fastapi.responses import JSONResponse
 from fastapi import File, UploadFile
@@ -23,12 +24,14 @@ import pathlib
 router = APIRouter()
 templates_path = pathlib.Path(__file__).parent/ "templates"
 templates = Jinja2Templates(directory=templates_path)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Chemin du fichier actuel (main.py)
+STATIC_DIR = os.path.join(BASE_DIR, "static")  # Doit pointer vers c:\...\Hustle\static
 
 router.mount("/static", StaticFiles(directory=Path(__file__).parent / "static"), name="static")
 
 reset_codes = {}  
 
-# ✅ Route d'inscription
+
 @router.post("/signup")
 async def register_user(
     request: Request,
@@ -49,7 +52,7 @@ async def register_user(
             )
         return RedirectResponse(url="/login", status_code=303)
     except Exception as e:
-        print(f"Error: {str(e)}")  # Pour voir l'erreur
+        print(f"Error: {str(e)}")  
         raise
 
 
@@ -75,32 +78,53 @@ async def login(
     key="token",
     value=token,
     httponly=True,
-    samesite="Lax",  # "None" si frontend/backend séparés
-    secure=False,     # False en dev (HTTP), True en prod (HTTPS)
-    path="/",         # Le cookie est envoyé pour toutes les routes
-    max_age=86400     # Durée de vie du cookie (en secondes)
+    samesite="Lax", 
+    secure=False,     
+    path="/",        #Le cookie est envoyé pour toutes les routes
+    max_age=86400     
  )
     
  return response
+
+
+import os
+from fastapi import APIRouter, Depends, File, UploadFile, HTTPException
+from sqlalchemy.orm import Session
+
 @router.post("/profile/update")
 async def update_profile(
-    request: Request,
-    photo: UploadFile = File(None),
-    user = Depends(get_current_user),
+    photo: UploadFile = File(...),
+    user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    if photo:
+    try:
+ 
+        BASE_DIR = os.path.dirname(os.path.abspath(__file__)) 
+        PHOTOS_DIR = os.path.join(BASE_DIR, "static", "photos")
+        os.makedirs(PHOTOS_DIR, exist_ok=True)
 
-        file_location = f"static/photos/{user.user_id}.jpg"
-        with open(file_location, "wb+") as file_object:
-            file_object.write(photo.file.read())
-        user.photo_url = file_location
+      
+        filename = f"{user.user_id}.jpg"
+        filepath = os.path.join(PHOTOS_DIR, filename)
 
-    db.commit()
-    return {"success": True}
+    
+        with open(filepath, "wb") as f:
+            contents = await photo.read()
+            f.write(contents)
 
 
-# ✅ Route pour ajouter un jeu (admin uniquement)
+        user.photo_url = f"/static/photos/{filename}"
+        db.commit()
+        db.refresh(user) 
+
+        return {"photo_url": user.photo_url}
+
+    except Exception as e:
+        db.rollback()
+        print(f"ERREUR : {str(e)}")
+        raise HTTPException(status_code=500, detail="Échec de la mise à jour")
+    
+
 @router.post("/games/add")
 async def add_new_game(
     request: Request,
@@ -155,11 +179,11 @@ async def rate_game(game_id: int, rating: int, db: Session = Depends(get_current
 
 
 
-# ✅ Route admin pour bannir un utilisateur (vérification admin ajoutée)
+#Route admin pour bannir un utilisateur (vérification admin ajoutée)
 @router.post("/admin/ban/{user_id}")
 async def ban_user(
     user_id: int,
-    admin: User = Depends(verify_admin),  # ✅ Vérification automatique
+    admin: User = Depends(verify_admin),  #Vérification automatique
     db: Session = Depends(get_db)
 ):
     admin=ban_user(db, admin_id=admin.user_id, user_id=user_id)
@@ -169,7 +193,7 @@ async def ban_user(
 
     return RedirectResponse(url="/admin", status_code=303)
 
-# ✅ Route pour récupérer un code de réinitialisation de mot de passe
+# Route pour récupérer un code de réinitialisation de mot de passe
 @router.post("/forgot")
 async def forgot_password(
     email: str = Form(...),
@@ -179,14 +203,14 @@ async def forgot_password(
     if not user:
         raise HTTPException(status_code=404, detail="Email not found")
 
-    # Générer un code à 6 chiffres
+    #Générer un code à 6 chiffres
     code = str(random.randint(100000, 999999))
     reset_codes[email] = code
-    print(f"Code envoyé à {email}: {code}")  # ⚠ À remplacer par un email réel
+    print(f"Code envoyé à {email}: {code}")  
 
     return {"message": "Code envoyé"}
 
-# ✅ Route pour valider le code et réinitialiser le mot de passe
+#Route pour valider le code et réinitialiser le mot de passe
 @router.post("/validate-code")
 async def validate_reset_code(
     emailuser: str = Form(...),
@@ -207,7 +231,7 @@ async def reset_password(
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    user.hashed_password = hash_password(new_password)  # Utiliser ta fonction de hash
+    user.hashed_password = hash_password(new_password)  
     db.commit()
 
     return {"message": "Password reset successful"}
