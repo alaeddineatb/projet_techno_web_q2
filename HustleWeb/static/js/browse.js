@@ -1,12 +1,11 @@
-//import { featuredGames, allGames, getGames, gameCategories } from './games-data.js';
-
-
 document.addEventListener('DOMContentLoaded', function() {
-    updateNav();
+    // First make sure authentication is checked and navigation is updated
+    checkAuth(); // Use the function from script.js
+    
+    // Then load games and set up event listeners
     loadGames();
     setupEventListeners();
 });
-
 
 function displayGames(featuredGames, gameCategories) {
     const featuredContainer = document.getElementById('featured-games-container');
@@ -26,40 +25,53 @@ function displayGames(featuredGames, gameCategories) {
         `;
     });
     
-    // Gestion des clics sur les cartes de jeu
-    console.log("Attaching listeners"); 
+    // Set up click handlers for game cards
     document.querySelectorAll('.game-card').forEach(card => {
         card.addEventListener('click', function() {
             const gameId = this.getAttribute('data-game-id');
-            console.log("Card clicked:", this.getAttribute('data-game-id'));
+            console.log("Card clicked:", gameId);
             window.location.href = `/game/${gameId}`;
         });
     });
 }
 
-
 function setupEventListeners() {
-
     const searchButton = document.getElementById('search-button');
     const searchInput = document.getElementById('game-search');
     
-    searchButton.addEventListener('click', searchGames);
-    searchInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') searchGames();
-    });
+    if (searchButton) {
+        searchButton.addEventListener('click', searchGames);
+    }
     
-
-    document.getElementById('game-categories-container').addEventListener('click', function(e) {
-        const card = e.target.closest('.game-card');
-        if (card) {
-            console.log("Click!");
-            const gameId = card.getAttribute('data-game-id');
-            window.location.href = `/game/${gameId}`;
-        }
-    });
+    if (searchInput) {
+        searchInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') searchGames();
+        });
+    }
+    
+    // Set up filter change listeners
+    const genreFilter = document.getElementById('genre-filter');
+    const platformFilter = document.getElementById('platform-filter');
+    const sortBy = document.getElementById('sort-by');
+    
+    if (genreFilter && platformFilter && sortBy) {
+        genreFilter.addEventListener('change', filterGames);
+        platformFilter.addEventListener('change', filterGames);
+        sortBy.addEventListener('change', filterGames);
+    }
+    
+    // Add delegation for game card clicks
+    const categoriesContainer = document.getElementById('game-categories-container');
+    if (categoriesContainer) {
+        categoriesContainer.addEventListener('click', function(e) {
+            const card = e.target.closest('.game-card');
+            if (card) {
+                const gameId = card.getAttribute('data-game-id');
+                window.location.href = `/game/${gameId}`;
+            }
+        });
+    }
 }
-
-
 
 function displaySearchResults(results, searchTerm) {
     document.querySelector('.featured-games').style.display = 'none';
@@ -95,45 +107,40 @@ function displaySearchResults(results, searchTerm) {
     });
 }
 
-
-document.addEventListener('DOMContentLoaded', function() {
-    updateNav();
-    loadGames(); // Charge directement depuis gamesdata.js
-    setupEventListeners();
-});
-
-// Charge les données locales
+// Load games from window.gamesData
 function loadGames() {
-    console.log("Categories:", window.gameCategories);
-    console.log("AllGames:", window.allGames);
+    console.log("Loading games data...");
+    
+    // Ensure we have access to the games data
+    if (!window.allGames || !window.featuredGames || !window.gameCategories) {
+        console.error("Game data not available. Make sure games-data.js is loaded correctly.");
+        return;
+    }
+    
     const categories = window.gameCategories.map(cat => ({
         name: cat,
         games: window.allGames.filter(game => game.category === cat)
     }));
+    
     console.log("Processed categories:", categories);
     displayGames(window.featuredGames, categories);
 }
 
-
-function categorizeGames(games) {
-    // Groupe les jeux par catégorie
-    return games.reduce((acc, game) => {
-        if (!acc[game.category]) acc[game.category] = [];
-        acc[game.category].push(game);
-        return acc;
-    }, {});
-}
-
-
-// Modifie la création des cartes pour correspondre à tes données
 function createGameCards(games, featured = false) {
-    console.log("Creating cards:", games);
+    if (!games || !Array.isArray(games) || games.length === 0) {
+        console.warn("No games to display");
+        return "";
+    }
+    
     return games.map(game => {
         const cardClass = featured ? 'game-card featured' : 'game-card';
-        
+        const imageStyle = game.image 
+            ? `background-color: ${game.image}; background-size: cover;` 
+            : `background-color: #333;`;
+            
         return `
             <div class="${cardClass}" data-game-id="${game.game_id}">
-                <div class="game-image" style="background-color: ${game.image}; background-size: cover;"></div>
+                <div class="game-image" style="${imageStyle}"></div>
                 <h3>${game.title}</h3>
                 <p>${game.category} | ${new Date(game.release_date).getFullYear()}</p>
                 <p>${game.platforms}</p>
@@ -143,13 +150,18 @@ function createGameCards(games, featured = false) {
     }).join('');
 }
 
-// Adapte les fonctions de recherche/filtre pour utiliser les données locales
 function searchGames() {
     const searchTerm = document.getElementById('game-search').value.trim().toLowerCase();
-    const results = allGames.filter(game => 
+    if (!searchTerm) {
+        loadGames();
+        return;
+    }
+    
+    const results = window.allGames.filter(game => 
         game.title.toLowerCase().includes(searchTerm) || 
         game.description.toLowerCase().includes(searchTerm)
     );
+    
     displaySearchResults(results, searchTerm);
 }
 
@@ -158,7 +170,7 @@ function filterGames() {
     const platformFilter = document.getElementById('platform-filter').value;
     const sortBy = document.getElementById('sort-by').value;
     
-    let filtered = [...allGames];
+    let filtered = [...window.allGames];
     
     if (genreFilter) {
         filtered = filtered.filter(game => game.category === genreFilter);
@@ -168,31 +180,32 @@ function filterGames() {
         filtered = filtered.filter(game => game.platforms.includes(platformFilter));
     }
     
-    // Tri
+    // Sort results
     switch(sortBy) {
         case 'price_asc':
+        case 'price':
             filtered.sort((a, b) => a.price - b.price);
             break;
         case 'price_desc':
             filtered.sort((a, b) => b.price - a.price);
             break;
+        case 'rating':
+            filtered.sort((a, b) => b.rating_avg - a.rating_avg);
+            break;
+        case 'release':
+            filtered.sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
+            break;
         default:
+            // Default to popularity (we can use rating as a proxy)
             filtered.sort((a, b) => b.rating_avg - a.rating_avg);
     }
     
     displayFilteredResults(filtered);
 }
 
-
-
-
-
-
-
-
-
 function displayFilteredResults(filteredGames) {
     const categoriesContainer = document.getElementById('game-categories-container');
+    document.querySelector('.featured-games').style.display = 'none';
     
     if (filteredGames.length === 0) {
         categoriesContainer.innerHTML = `
@@ -202,61 +215,23 @@ function displayFilteredResults(filteredGames) {
                 <button id="reset-filters" class="btn">Reset Filters</button>
             </div>
         `;
-        
-        document.getElementById('reset-filters').addEventListener('click', function() {
-            document.getElementById('genre-filter').value = '';
-            document.getElementById('platform-filter').value = '';
-            document.getElementById('sort-by').value = 'popularity';
-            loadGames();
-        });
     } else {
         categoriesContainer.innerHTML = `
             <div class="game-section">
-                <h2>Filtered Games</h2>
+                <h2>Filtered Games (${filteredGames.length} results)</h2>
                 <div class="game-row">
                     ${createGameCards(filteredGames)}
                 </div>
                 <button id="reset-filters" class="btn" style="margin: 20px auto; display: block;">Reset Filters</button>
             </div>
         `;
-        
-        document.getElementById('reset-filters').addEventListener('click', function() {
-            document.getElementById('genre-filter').value = '';
-            document.getElementById('platform-filter').value = '';
-            document.getElementById('sort-by').value = 'popularity';
-            loadGames();
-        });
     }
-}
-
-// Gestion de la navigation
-function updateNav() {
-    const navLinks = document.getElementById('nav-links');
-    if (!navLinks) return;
-
-    const token = localStorage.getItem('token'); 
     
-    if (token) {
-        const username = localStorage.getItem('username');
-        navLinks.innerHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/profile">My Profile</a>
-            <a href="#" id="logout-link">Logout (${username})</a>
-        `;
-        
-        document.getElementById('logout-link').addEventListener('click', (e) => {
-            e.preventDefault();
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        });
-    } else {
-        navLinks.innerHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/login">Login</a>
-            <a href="/signup">Sign Up</a>
-            <a href="/profile">My Profile</a>
-        `;
-    }
+    document.getElementById('reset-filters').addEventListener('click', function() {
+        document.getElementById('genre-filter').value = '';
+        document.getElementById('platform-filter').value = '';
+        document.getElementById('sort-by').value = 'popularity';
+        loadGames();
+        document.querySelector('.featured-games').style.display = 'block';
+    });
 }

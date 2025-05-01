@@ -1,7 +1,3 @@
-
-<script>
-    window.gamesData = JSON.parse('{{ games_data|safe }}');
-</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -16,11 +12,7 @@
     <div class="header">
         <h1>🎮 GamerZone 🎮</h1>
         <nav id="nav-links">
-            <a href="index">Home</a>
-            <a href="browse">Browse Games</a>
-            <a href="login">Login</a>
-            <a href="signup">Sign Up</a>
-            <a href="profile">Profile</a>
+            <!-- Navigation will be dynamically populated by script.js -->
         </nav>
     </div>
 
@@ -61,10 +53,12 @@
         <div class="featured-games">
             <h2>Featured Games</h2>
             <div class="game-carousel" id="featured-games-container">
+                <!-- Featured games will be inserted here -->
             </div>
         </div>
         
         <div id="game-categories-container">
+            <!-- Game categories will be inserted here -->
         </div>
     </div>
 
@@ -77,10 +71,14 @@
         </div>
     </div>
 
-    <script src="/static/js/games-data.js"></script>
+    <!-- Data initialization script -->
+    <script>
+        window.gamesData = JSON.parse('{{ games_data|safe }}');
+    </script>
+    
+    <!-- Load core scripts first -->
     <script src="/static/js/script.js"></script>
+    <script src="/static/js/games-data.js"></script>
     <script src="/static/js/browse.js"></script>
-    <script type="module" src="/static/js/browse.js"></script>
-    <script type="module" src="/static/js/games-data.js"></script>
 </body>
 </html>

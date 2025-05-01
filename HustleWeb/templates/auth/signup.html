@@ -11,14 +11,12 @@
     <div class="header">
         <h1>🎮 GamerZone 🎮</h1>
         <nav id="nav-links">
-            <a href="index">Home</a>
-            <a href="browse">Browse Games</a>
-            <a href="login">Login</a>
-            <a href="signup">Sign Up</a>
+            <!-- Navigation links will be dynamically updated by script.js -->
         </nav>
     </div>
 
     <div class="container">
+        <h2>Create New Account</h2>
         <form id="signup-form">
             <label for="username">Username:</label>
             <input type="text" id="username" name="username" required>
@@ -31,6 +29,7 @@
 
             <button type="submit" class="btn">Sign Up</button>
         </form>
+        <p>Already have an account? <a href="/login">Login</a></p>
     </div>
 
     <div class="footer">
@@ -43,12 +42,5 @@
     </div>
 
     <script src="/static/js/script.js"></script>
-    <script>
-        
-        document.getElementById('signup-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            signupUser();
-        });
-    </script>
 </body>
 </html>

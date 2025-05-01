@@ -8,20 +8,10 @@
     <link rel="stylesheet" href="/static/css/profile.css">
 </head>
 <body>
-    <div class="header">
-        <h1>🎮 GamerZone 🎮</h1>
-        <nav id="nav-links">
-            <a href="index">Welcome</a>
-            <a href="browse">Browse Games</a>
-            <a href="login">Login</a>
-            <a href="signup">Sign Up</a>
-            <a href="profile">Profile</a>
-        </nav>
-    </div>
-
     <div class="profile-container">
+        <a href="/" class="back-button">← Back to Homepage</a>
+        
         <div class="profile-content">
-     
             <div class="profile-pic-container">
                 <img id="profile-pic" src="default.jpg" class="profile-image">
                 <label for="photo-upload" class="upload-overlay">
@@ -29,20 +19,10 @@
                 </label>
                 <input type="file" id="photo-upload" accept="image/*" class="upload-input">
             </div>
-
-         
+            
             <div class="user-info">
                 <h2 id="profile-username" data-username="{{ username }}" data-profile-pic="{{ profile_pic }}">{{ username }}</h2>
             </div>
-        </div>
-    </div>
-
-    <div class="footer">
-        <p>&copy; 2025 GamerZone. All rights reserved.</p>
-        <div class="social-links">
-            <a href="#">Facebook</a>
-            <a href="#">Twitter</a>
-            <a href="#">Discord</a>
         </div>
     </div>
 

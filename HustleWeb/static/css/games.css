@@ -13,6 +13,30 @@ body {
     background: #1a1a1a;
     border-radius: 10px;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+    position: relative;
+}
+
+.back-navigation {
+    margin-bottom: 20px;
+}
+
+.back-button {
+    display: inline-block;
+    color: #00ff00;
+    text-decoration: none;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: all 0.3s;
+    padding: 8px 16px;
+    border: 1px solid #00ff00;
+    border-radius: 5px;
+    background-color: #1a1a1a;
+}
+
+.back-button:hover {
+    background-color: rgba(0, 255, 0, 0.1);
+    transform: translateX(-5px);
+    box-shadow: 0 2px 8px rgba(0, 255, 0, 0.3);
 }
 
 .game-header {
