@@ -4,14 +4,20 @@ import uvicorn
 from views import router as views_router
 from post import router as post_router
 from pathlib import Path
-from models import init_db
+from initdb import init_db
 import os 
+from fastapi.middleware.cors import CORSMiddleware
 
 
 app = FastAPI(title="HustleWeb", 
              description="Plateforme de jeux vidéo", 
              version="1.0.0")
-
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # À adapter en production
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(views_router)
 app.include_router(post_router)

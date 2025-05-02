@@ -1,9 +1,27 @@
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import Optional, List
 from sqlalchemy import create_engine, String, Integer, DateTime, ForeignKey, Float, Boolean, Text
 from sqlalchemy.orm import relationship, declarative_base, Mapped, mapped_column, sessionmaker, Session
 
+
 Base = declarative_base()
+
+
+
+
+class Rating(Base):
+    __tablename__ = "ratings"
+    rating_id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
+    game_id: Mapped[int] = mapped_column(Integer, ForeignKey("games.game_id"), nullable=False)
+    value: Mapped[int] = mapped_column(Integer, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)  # UTC explicite
+    )
+    user: Mapped["User"] = relationship(back_populates="ratings")
+    game: Mapped["Game"] = relationship(back_populates="ratings")
+
 
 class User(Base):
     """Modèle pour les utilisateurs"""
@@ -20,6 +38,7 @@ class User(Base):
     photo_url: Mapped[Optional[str]] = mapped_column(String(200), default="/static/photos/default.jpg")
     purchases: Mapped[List["Purchase"]] = relationship(back_populates="user")
     messages: Mapped[List["Message"]] = relationship(back_populates="user")
+    ratings: Mapped[List["Rating"]] = relationship(back_populates="user")
 
 class Game(Base):
     """Modèle pour les jeux"""
@@ -38,30 +57,26 @@ class Game(Base):
     
     purchases: Mapped[List["Purchase"]] = relationship(back_populates="game")
     messages: Mapped[List["Message"]] = relationship(back_populates="game")
+    ratings: Mapped[List["Rating"]] = relationship(back_populates="game")
 
 class Purchase(Base):
-    """Modèle pour les achats"""
     __tablename__ = "purchases"
     
-    purchase_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
-    game_id: Mapped[int] = mapped_column(Integer, ForeignKey("games.game_id"), nullable=False)
-    purchase_date: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    price: Mapped[float] = mapped_column(Float, nullable=False)
-    
+    purchase_id: Mapped[int] = mapped_column(primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))  # 'users' avec 's'
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"))  # 'games' avec 's'
     user: Mapped["User"] = relationship(back_populates="purchases")
     game: Mapped["Game"] = relationship(back_populates="purchases")
+    price: Mapped[float] = mapped_column(Float, default=0.0)
 
 class Message(Base):
-    """Modèle pour les messages"""
     __tablename__ = "messages"
     
     message_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
-    game_id: Mapped[int] = mapped_column(Integer, ForeignKey("games.game_id"), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
-    content: Mapped[str] = mapped_column(String(500), nullable=False)
-    
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False) # 'users' avec 's'
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"), nullable=False)  # 'games' avec 's'
+    content: Mapped[str]
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow) 
     user: Mapped["User"] = relationship(back_populates="messages")
     game: Mapped["Game"] = relationship(back_populates="messages")
 
@@ -69,11 +84,12 @@ class Message(Base):
 
 
 # Configuration de la base de données
-DATABASE_URL = "sqlite:///./game_store.db"
+DATABASE_URL = "sqlite:///HustleWeb/game_store.db"
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-def init_db():
-    """Initialise la base de données"""
-    Base.metadata.create_all(bind=engine)
+
+
+
+
 

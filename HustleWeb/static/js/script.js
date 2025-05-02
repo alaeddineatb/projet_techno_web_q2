@@ -92,7 +92,6 @@ async function loginUser(event) {
             
             console.log('Login successful, updating navigation');
             
-            // Force a navigation update before redirecting
             updateNavigation(true);
             
             // Use a slight delay to ensure state is saved before redirect

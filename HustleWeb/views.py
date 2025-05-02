@@ -3,9 +3,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Depends
 from backend import get_db, get_all_games, get_game_by_id, get_game_messages, get_current_user
-from models import Game,User
+from models import Game,User,Message
 import pathlib
 import json
+from sqlalchemy.orm import Session
 router = APIRouter()
 
 templates_path = pathlib.Path(__file__).parent/ "templates"
@@ -85,3 +86,24 @@ async def ratings_page(request: Request):
 async def message_page(request: Request):
     return templates.TemplateResponse("message.html", {"request": request})
 
+@router.get("/games/{game_id}/messages")
+async def get_messages(game_id: int, db: Session = Depends(get_db)):
+    try:
+        messages = db.query(Message)\
+            .join(User)\
+            .filter(Message.game_id == game_id)\
+            .order_by(Message.created_at.desc())\
+            .limit(100)\
+            .all()
+
+        return [
+            {
+                "content": msg.content,
+                "created_at": msg.created_at.isoformat(),
+                "user": {"username": msg.user.username}
+            }
+            for msg in messages
+        ]
+    except Exception as e:
+        print(f"ERREUR BDD: {str(e)}")  # Debug crucial
+        raise HTTPException(status_code=500)

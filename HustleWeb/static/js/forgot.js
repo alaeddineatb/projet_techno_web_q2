@@ -2,24 +2,22 @@ document.addEventListener('DOMContentLoaded', function() {
     const forgotForm = document.getElementById('forgot-form');
     const codeSection = document.getElementById('code-section');
 
-    forgotForm.addEventListener('submit', async function(e) {
-        e.preventDefault();
+    document.getElementById('forgot-form').addEventListener('submit', async (e) => {
+        e.preventDefault();  // Bloque le comportement par défaut
+        
         const email = document.getElementById('email').value;
-
+        
         try {
             const response = await fetch('/forgot', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ email: email })
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email })  // Envoi en JSON
             });
-
+            
             if (response.ok) {
-                forgotForm.classList.add('hidden');
-                codeSection.classList.remove('hidden');
-            } else {
-                alert('Erreur lors de l\'envoi du code');
+
+                document.getElementById('email-form').classList.add('hidden');
+                document.getElementById('code-form').classList.remove('hidden');
             }
         } catch (error) {
             console.error('Erreur:', error);
@@ -65,4 +63,26 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Erreur:', error);
         }
     });
+
+
+    async function handleForgotPassword() {
+        const email = document.getElementById('email').value;
+        
+        try {
+            const response = await fetch('/forgot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json', // <-- ESSENTIEL
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({ email }) // Format JSON
+            });
+    
+            if (response.ok) {
+
+            }
+        } catch (error) {
+            console.error("Erreur :", error);
+        }
+    }
 });

@@ -3,7 +3,7 @@ let currentGame = null;
 let currentUsername = localStorage.getItem('username') || 'Utilisateur';
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Check authentication and update navigation if script.js is available
+
     if (typeof checkAuth === 'function') {
         checkAuth();
     }
@@ -181,43 +181,40 @@ async function processPayment(event, gameId) {
     const cardExpiry = document.getElementById('card-expiry').value;
     const cardCvv = document.getElementById('card-cvv').value;
     
-    // Basic validation
+    // Validation basique
     if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
-        alert('Veuillez remplir tous les champs du formulaire.');
+        alert('Veuillez remplir tous les champs');
         return;
     }
-    
-    if (cardNumber.length !== 16) {
-        alert('Le numéro de carte doit contenir 16 chiffres.');
-        return;
-    }
-    
-    if (cardCvv.length !== 3) {
-        alert('Le code CVV doit contenir 3 chiffres.');
-        return;
-    }
-    
-    // Show loading state
+
     const confirmButton = document.getElementById('confirm-purchase');
-    confirmButton.textContent = 'Traitement en cours...';
     confirmButton.disabled = true;
-    
+    confirmButton.textContent = 'Traitement...';
+
     try {
-        // Simulate API call - in a real app, this would communicate with your backend
-        await simulatePaymentProcessing();
+        // Appel réel au backend
+        const response = await fetch(`/purchase/${gameId}`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+
+        const data = await response.json();
         
-        // Hide payment modal and show success
+        if (!response.ok) {
+            throw new Error(data.detail || "Échec de l'achat");
+        }
+
         hideAllModals();
         showModal('purchase-success-modal');
-        
-        // Reset form
         document.getElementById('payment-form').reset();
+
     } catch (error) {
-        alert('Erreur lors du traitement du paiement: ' + error.message);
+        alert(`ERREUR: ${error.message}`);
     } finally {
-        // Reset button state
-        confirmButton.textContent = 'Confirmer l\'achat';
         confirmButton.disabled = false;
+        confirmButton.textContent = 'Confirmer l\'achat';
     }
 }
 
@@ -310,45 +307,42 @@ function setupForumChat(gameId) {
 
 async function loadForumMessages(gameId) {
     const messagesContainer = document.getElementById('forum-messages');
-    
-    // In a real application, you would fetch messages from the server
-    // For this demo, we'll simulate some messages
-    
-    // Clear loading message
-    setTimeout(() => {
+    if (!messagesContainer) return;
+
+    try {
+        // Afficher un loader
+        messagesContainer.innerHTML = '<div class="loader">Chargement des messages...</div>';
+
+        // Appel API
+        const response = await fetch(`/games/${gameId}/messages`);
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+        
+        const messages = await response.json();
+
+        // Vider le conteneur
         messagesContainer.innerHTML = '';
-        
-        // Add some sample messages
-        const sampleMessages = [
-            {
-                user: 'GameMaster',
-                time: '2 heures',
-                content: 'Bienvenue dans le forum de ce jeu ! N\'hésitez pas à poser vos questions ou à partager vos expériences.'
-            },
-            {
-                user: 'ProGamer123',
-                time: '1 heure',
-                content: 'Ce jeu est incroyable ! J\'ai passé 5 heures dessus hier et je n\'ai pas vu le temps passer.'
-            },
-            {
-                user: 'Newbie42',
-                time: '30 minutes',
-                content: 'Est-ce que quelqu\'un peut m\'aider avec le niveau 3 ? Je reste bloqué au même endroit...'
-            },
-            {
-                user: 'DevFan',
-                time: '15 minutes',
-                content: 'Les graphismes sont vraiment impressionnants. Quelle carte graphique utilisez-vous pour jouer ?'
-            }
-        ];
-        
-        sampleMessages.forEach(message => {
-            messagesContainer.appendChild(createMessageElement(message));
+
+        // Ajouter chaque message
+        messages.forEach(msg => {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'forum-message';
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-user">${msg.user.username}</span>
+                    <span class="message-time">${timeSince(msg.created_at)}</span>
+                </div>
+                <p class="message-content">${msg.content}</p>
+            `;
+            messagesContainer.appendChild(messageElement);
         });
-        
-        // Scroll to bottom of messages
+
+        // Scroll automatique vers le bas
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }, 1000);
+
+    } catch (error) {
+        console.error('Erreur chargement messages:', error);
+        messagesContainer.innerHTML = '<div class="error">Erreur de chargement des messages</div>';
+    }
 }
 
 function createMessageElement(message) {
@@ -379,32 +373,96 @@ function createMessageElement(message) {
     return messageDiv;
 }
 
-function sendForumMessage(gameId) {
-    if (!isUserAuthenticated()) {
-        showModal('login-required-modal');
-        return;
-    }
-    
+async function sendForumMessage(gameId) {
     const messageInput = document.getElementById('message-input');
-    const content = messageInput.value.trim();
+    try {
+        const response = await fetch(`/games/${gameId}/messages`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            },
+            body: JSON.stringify({ 
+                content: messageInput.value.trim() 
+            })
+        });
+
+        const data = await response.json();
+        
+        if (!response.ok) {
+            throw new Error(data.detail || "Erreur lors de l'envoi");
+        }
+
+        // Recharge les messages si succès
+        await loadForumMessages(gameId);
+        messageInput.value = '';
+
+    } catch (error) {
+        alert(`ERREUR: ${error.message}`);
+        console.error("Erreur complète:", error);
+    }
+}
+
+
+function timeSince(dateString) {
+    // 1. Forcer le format UTC si absent
+    const isoDateString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
+    const date = new Date(isoDateString);
     
-    if (!content) {
-        return; // Don't send empty messages
+    // 2. Validation de la date
+    if (isNaN(date)) {
+        console.error(`Date invalide : ${dateString}`);
+        return 'date inconnue';
+    }
+
+    // 3. Calcul en UTC pour éviter les décalages
+    const nowUTC = Date.UTC(
+        new Date().getUTCFullYear(),
+        new Date().getUTCMonth(),
+        new Date().getUTCDate(),
+        new Date().getUTCHours(),
+        new Date().getUTCMinutes(),
+        new Date().getUTCSeconds()
+    );
+    
+    const dateUTC = Date.UTC(
+        date.getUTCFullYear(),
+        date.getUTCMonth(),
+        date.getUTCDate(),
+        date.getUTCHours(),
+        date.getUTCMinutes(),
+        date.getUTCSeconds()
+    );
+
+    const seconds = Math.floor((nowUTC - dateUTC) / 1000);
+    
+    // 4. Détection précise des intervalles
+    const intervals = {
+        année: 31536000,
+        mois:  2592000,
+        jour:   86400,
+        heure:   3600,
+        minute:    60
+    };
+
+    // 5. Trouver le plus grand intervalle
+    let largestUnit = 'seconde';
+    let largestValue = 0;
+    
+    for (const [unit, secondsInUnit] of Object.entries(intervals)) {
+        const interval = Math.floor(seconds / secondsInUnit);
+        if (interval >= 1) {
+            largestUnit = unit;
+            largestValue = interval;
+            break; // Prend le premier intervalle valide
+        }
+    }
+
+    // 6. Formatage intelligent
+    if (largestUnit === 'seconde') {
+        return 'à l\'instant';
     }
     
-    // In a real app, you would send this to your server
-    // For now, we'll just add it to the DOM
-    const messagesContainer = document.getElementById('forum-messages');
-    
-    const newMessage = {
-        user: currentUsername,
-        time: 'maintenant',
-        content: content
-    };
-    
-    messagesContainer.appendChild(createMessageElement(newMessage));
-    
-    // Clear input and scroll to bottom
-    messageInput.value = '';
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    const plural = largestValue > 1 ? 's' : '';
+    return `il y a ${largestValue} ${largestUnit}${plural}`;
 }

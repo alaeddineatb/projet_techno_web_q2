@@ -41,19 +41,115 @@ def create_jwt(user_id: int) -> str:
 
 
 
+
+def initialize_sample_games(db: Session):
+    sample_games = [
+        {
+        "game_id": 1,
+        "title": "Cyber Odyssey",
+        "description": "Un RPG d'action futuriste avec une histoire immersive",
+        "price": 59.99,
+        "release_date": "2025-03-15T00:00:00Z",
+        "publisher": "Neon Games",
+        "category": "RPG",
+        "rating_avg": 4.8,
+        "platforms": "PC,PlayStation,Xbox",
+        "image": "#333"
+    },
+    {
+        "game_id": 2,
+        "title": "Galaxy Commander",
+        "description": "Stratégie spatiale avec gestion de ressources complexes",
+        "price": 49.99,
+       "release_date": "2024-11-20T00:00:00Z",
+        "publisher": "StrategySoft",
+        "category": "Strategy",
+        "rating_avg": 4.5,
+        "platforms": "PC,Mobile",
+        "image": "#333"
+    },
+            {
+        "game_id": 3,
+        "title": "Speed Demons",
+        "description": "Course de rue avec personnalisation poussée des véhicules",
+        "price": 39.99,
+        "release_date": "2025-01-10T00:00:00Z",
+        "publisher": "Racing Entertainment",
+        "category": "Racing",
+        "rating_avg": 4.7,
+        "platforms": "PlayStation,Xbox,PC",
+        "image": "#333"
+    },
+    {
+        "game_id": 4,
+        "title": "Mystic Lands",
+        "description": "MMORPG fantastique avec monde ouvert gigantesque",
+        "price": 29.99,
+        "release_date": "2024-09-05T00:00:00Z",
+        "publisher": "Fantasy Studios",
+        "category": "RPG",
+        "rating_avg": 4.9,
+        "platforms": "PC",
+        "image": "#333"
+    }
+    ]
+
+    for game in sample_games:
+        if not db.query(Game).filter(Game.title == game["title"]).first():
+            new_game = Game(**game)
+            db.add(new_game)
+    db.commit()
+
+
+
+
+
+
 def get_current_user(
-    token: str = Cookie(default=None, alias="token"),  
+    token: str = Cookie(default=None, alias="token"),  # À adapter
     db: Session = Depends(get_db)
 ) -> User:
+    print(f"🔑 Token reçu: {token}")  # Debug 1
+    
     if not token:
+        print("❌ Aucun token trouvé dans les cookies")
         raise HTTPException(401, "Not authenticated")
     
     try:
+        # Décodage JWT
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user = db.query(User).filter(User.user_id == int(payload["sub"])).first()
+        print(f"📄 Payload décodé: {payload}")  # Debug 2
+        
+        # Extraction user_id
+        user_id = payload.get("sub")
+        if not user_id:
+            print("❌ 'sub' manquant dans le payload")
+            raise HTTPException(401, "Invalid token")
+        
+        print(f"🔍 User ID extrait: {user_id} (type: {type(user_id)})")  # Debug 3
+        
+        # Conversion en int
+        try:
+            user_id_int = int(user_id)
+        except ValueError:
+            print(f"❌ Impossible de convertir user_id en int: {user_id}")
+            raise HTTPException(401, "Invalid user ID format")
+        
+        # Recherche utilisateur
+        user = db.query(User).filter(User.user_id == user_id_int).first()
+        if not user:
+            print(f"❌ Utilisateur introuvable en BDD: ID {user_id_int}")
+            raise HTTPException(401, "User not found")
+        
+        print(f"✅ Utilisateur trouvé: {user.username}")  # Debug 4
         return user
-    except Exception:
+    
+    except JWTError as e:
+        print(f"💥 Erreur JWT: {str(e)}")  # Debug 5
         raise HTTPException(401, "Invalid token")
+    except Exception as e:
+        print(f"💥 Erreur inattendue: {str(e)}")  # Debug 6
+        raise HTTPException(500, "Internal server error")
 
 
 
@@ -135,54 +231,65 @@ def get_all_games(db: Session, skip: int = 0, limit: int = 100) -> List[Game]:
     return db.query(Game).offset(skip).limit(limit).all()
 
 
-def create_purchase(db: Session, user_id: int, game_id: int) -> Optional[Purchase]:
-    """Crée un nouvel achat"""
-    user = db.query(User).filter(User.user_id == user_id, User.is_banned == False).first()
-    game = db.query(Game).filter(Game.game_id == game_id).first()
-    
-    if not user or not game:
-        return None
-    
-    # Vérifie si l'utilisateur a déjà acheté le jeu
-    if db.query(Purchase).filter(Purchase.user_id == user_id, Purchase.game_id == game_id).first():
-        return None
-    
-    purchase = Purchase(
-        purchase_id=random.randint(1, 10**9),
-        user_id=user_id,
-        game_id=game_id,
-        price=game.price,
-        purchase_date=datetime.utcnow()
-    )
-    
-    db.add(purchase)
-    db.commit()
-    db.refresh(purchase)
-    return purchase
+def create_purchase(db: Session, user_id: int, game_id: int, price: float):
+    """Crée un achat en base de données"""
+    print(f"\n[DEBUG] Création achat - user: {user_id}, game: {game_id}, price: {price}")
+    try:
+        new_purchase = Purchase(
+            user_id=user_id,
+            game_id=game_id,
+            price=price,
+        )
+        
+        db.add(new_purchase)
+        db.commit()
+        db.refresh(new_purchase)
+        print(f"[DEBUG] Achat enregistré - ID: {new_purchase.purchase_id}")
+        return new_purchase
+
+    except Exception as e:
+        db.rollback()
+        print(f"[DEBUG] ERREUR création achat: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur création achat: {str(e)}"
+        )
 
 def get_user_purchases(db: Session, user_id: int) -> List[Purchase]:
     """Récupère les achats d'un utilisateur"""
     return db.query(Purchase).filter(Purchase.user_id == user_id).all()
 
+def create_message(db: Session, user_id: int, game_id: int, content: str) -> Message:
+    """Crée un message avec vérification d'achat"""
+    # Vérifie si l'utilisateur possède le jeu
+    purchase = db.query(Purchase).join(Game).filter(
+        Purchase.user_id == user_id,
+        Purchase.game_id == game_id
+    ).first()
 
-def create_message(db: Session, user_id: int, game_id: int, content: str) -> Optional[Message]:
-    """Crée un nouveau message"""
-    # Vérifie si l'utilisateur a acheté le jeu
-    if not db.query(Purchase).filter(Purchase.user_id == user_id, Purchase.game_id == game_id).first():
-        return None
-    
-    message = Message(
-        message_id=random.randint(1, 10**9),
-        user_id=user_id,
-        game_id=game_id,
-        content=content,
-        created_at=datetime.utcnow()
-    )
-    
-    db.add(message)
-    db.commit()
-    db.refresh(message)
-    return message
+    if not purchase:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous devez acheter le jeu pour poster des messages"
+        )
+
+    try:
+        new_message = Message(
+            user_id=user_id,
+            game_id=game_id,
+            content=content
+        )
+        db.add(new_message)
+        db.commit()
+        db.refresh(new_message)
+        return new_message
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur serveur: {str(e)}"
+        )
 
 def get_game_messages(db: Session, game_id: int) -> List[Message]:
     """Récupère les messages d'un jeu"""
