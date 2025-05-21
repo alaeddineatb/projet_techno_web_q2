@@ -116,3 +116,20 @@ async def rate_game(
     current_user: User = Depends(get_current_user)
 ):
     return add_rating(db, user_id=current_user.id, game_id=game_id, rating=rating)
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#code web cam
+from fastapi import WebSocket
+
+connected_clients = []
+
+@app.websocket("/ws/messages/{game_id}")
+async def websocket_messages(websocket: WebSocket, game_id: int):
+    await websocket.accept()
+    connected_clients.append(websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            for client in connected_clients:
+                await client.send_text(f"[Jeu {game_id}] Nouveau message: {data}")
+    except:
+        connected_clients.remove(websocket)
