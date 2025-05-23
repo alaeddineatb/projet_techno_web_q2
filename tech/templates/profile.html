@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profile - GamerZone</title>
+    <link rel="stylesheet" href="/static/css/global.css">
+    <link rel="stylesheet" href="/static/css/profile.css">
+</head>
+<body>
+    <div class="profile-container">
+        <a href="/" class="back-button">← Back to Homepage</a>
+        
+        <div class="profile-content">
+            <div class="profile-pic-container">
+                <img id="profile-pic" src="default.jpg" class="profile-image">
+                <label for="photo-upload" class="upload-overlay">
+                    <span class="upload-text">📷 Upload</span>
+                </label>
+                <input type="file" id="photo-upload" accept="image/*" class="upload-input">
+            </div>
+            
+            <div class="user-info">
+                <h2 id="profile-username" data-username="{{ username }}" data-profile-pic="{{ profile_pic }}">{{ username }}</h2>
+                <p class="user-stats">Membre depuis <span id="member-since">Mars 2025</span> • <span id="games-count">0</span> jeux achetés</p>
+            </div>
+
+            <!-- Profile Tabs Navigation -->
+            <div class="profile-tabs">
+                <button class="tab-button active" data-tab="purchases">Mes Jeux</button>
+                <button class="tab-button" data-tab="ratings">Mes Notes</button>
+                <button class="tab-button" data-tab="messages">Mes Messages</button>
+            </div>
+
+            <!-- Tab Content -->
+            <div class="tab-content">
+                <!-- Purchases Tab -->
+                <div id="purchases" class="tab-pane active">
+                    <h3>Jeux Achetés</h3>
+                    <div class="games-grid" id="purchased-games">
+                        <div class="loading">Chargement des jeux...</div>
+                    </div>
+                </div>
+
+                <!-- Ratings Tab -->
+                <div id="ratings" class="tab-pane">
+                    <h3>Mes Évaluations</h3>
+                    <div class="ratings-list" id="user-ratings">
+                        <div class="loading">Chargement des évaluations...</div>
+                    </div>
+                </div>
+
+                <!-- Messages Tab -->
+                <div id="messages" class="tab-pane">
+                    <h3>Activité Forum</h3>
+                    <div class="forum-activity" id="user-messages">
+                        <div class="loading">Chargement des messages...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/script.js"></script>
+    <script src="/static/js/profile.js"></script>
+</body>
+</html>
