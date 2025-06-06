@@ -1,8 +1,11 @@
-// games-data.js - Version compatible avec le modèle backend
-const gameCategories = ["Action", "RPG", "Strategy", "Adventure", "Sports", "Simulation"];
+
+const gameCategories = [
+  "Action", "RPG", "Strategy", "Adventure", 
+  "Sports", "Simulation", "Racing"
+];
 const gamePlatforms = ["PC", "PlayStation", "Xbox", "Nintendo Switch", "Mobile"];
 
-// Format des jeux correspondant au modèle Game
+
 const featuredGames = [
     {
         game_id: 1,
@@ -64,7 +67,7 @@ function getGames(category = null) {
     return allGames.filter(game => game.category === category);
 }
 
-// Export pour utilisation dans d'autres fichiers
+
 
 window.gameCategories = gameCategories;
 window.allGames = allGames;

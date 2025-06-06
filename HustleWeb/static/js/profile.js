@@ -114,38 +114,45 @@ function setupTabs() {
     });
 }
 
-// Load purchased games from server or mock data
 async function loadPurchasedGames() {
     const purchasedGamesContainer = document.getElementById('purchased-games');
     
     try {
-        // In a real application, this would be a fetch request to your API
-        // For this demo, we'll simulate an API response with mock data
-        const mockApiResponse = await simulateApiCall('/api/user/purchases', 1000);
+        purchasedGamesContainer.innerHTML = '<div class="loader">Chargement de vos jeux...</div>';
         
-        // Update games count
+        const response = await fetch('/api/user/purchases', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erreur de chargement');
+        
+        const purchasedGames = await response.json();
+        
+
         const gamesCountElement = document.getElementById('games-count');
         if (gamesCountElement) {
-            gamesCountElement.textContent = mockApiResponse.length;
+            gamesCountElement.textContent = purchasedGames.length;
         }
         
-        // Clear loading state
         purchasedGamesContainer.innerHTML = '';
         
-        if (mockApiResponse.length === 0) {
-            // Show empty state
+        if (purchasedGames.length === 0) {
             purchasedGamesContainer.innerHTML = `
                 <div class="empty-state">
                     <p>Vous n'avez pas encore acheté de jeux.</p>
-                    <p>Parcourez notre catalogue et commencez votre collection!</p>
                     <a href="/browse" class="cta-button">Explorer les jeux</a>
                 </div>
             `;
             return;
         }
         
-        // Create game cards
-        mockApiResponse.forEach(game => {
+        // Créer les cartes de jeu
+        purchasedGames.forEach(game => {
+            const roundedRating = Math.round(game.rating_avg || 0);
+            const stars = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
+            
             const gameCard = document.createElement('div');
             gameCard.className = 'game-card';
             gameCard.innerHTML = `
@@ -153,197 +160,231 @@ async function loadPurchasedGames() {
                 <div class="game-info">
                     <h4>${game.title}</h4>
                     <p>${game.category}</p>
-                    <div class="game-rating">
-                        ${game.rating ? '★'.repeat(game.rating) + '☆'.repeat(5 - game.rating) : 'Non noté'}
+                    <div class="game-rating">${stars}</div>
+                    <div class="purchase-date">Acheté le: ${new Date(game.purchase_date).toLocaleDateString()}</div>
+                </div>
+            `;
+            gameCard.addEventListener('click', () => {
+                window.location.href = `/game/${game.id}`;
+            });
+            purchasedGamesContainer.appendChild(gameCard);
+        });
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        purchasedGamesContainer.innerHTML = `
+            <div class="error">Erreur de chargement des jeux achetés</div>
+        `;
+    }
+}
+
+async function loadUserMessages() {
+     const messagesContainer = document.getElementById('user-messages');
+    
+    try {
+        messagesContainer.innerHTML = '<div class="loader">Chargement de vos messages...</div>';
+        
+        const response = await fetch('/api/user/messages', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) throw new Error('Erreur de chargement');
+        
+        const userMessages = await response.json();
+        
+        
+        messagesContainer.innerHTML = '';
+        
+        if (userMessages.length === 0) {
+            messagesContainer.innerHTML = `
+                <div class="empty-state">
+                    <p>Vous n'avez pas encore envoyé de messages.</p>
+                    <a href="/browse" class="cta-button">Explorer et parler de vos jeux préfèrés</a>
+                </div>
+            `;
+            return;
+        }
+        
+      
+        userMessages.forEach(message => {
+            const messageCard = document.createElement('div');
+            messageCard.className = 'message-card';
+            
+            const messageDate = new Date(message.created_at);
+            const formattedDate = `${messageDate.toLocaleDateString()} à ${messageDate.toLocaleTimeString()}`;
+            
+            messageCard.innerHTML = `
+                <div class="message-header">
+                    <span class="message-game">${message.game.title}</span>
+                    <span class="message-date">${formattedDate}</span>
+                </div>
+                <div class="message-content">${message.content}</div>
+            `;
+            
+            messageCard.addEventListener('click', () => {
+                window.location.href = `/game/${message.game_id}#message-${message.message_id}`;
+            });
+            
+            messagesContainer.appendChild(messageCard);
+        });
+        
+    } catch (error) {
+        console.error('Erreur:', error);
+        purchasedGamesContainer.innerHTML = `
+            <div class="error">Erreur de chargement des jeux achetés</div>
+        `;
+    }
+}
+
+
+
+
+async function loadUserRatings() {
+    const ratingsContainer = document.getElementById('user-ratings-container');
+    if (!ratingsContainer) return; // Garde contre les éléments manquants
+    
+    try {
+        ratingsContainer.innerHTML = '<div class="loader">Chargement de vos évaluations...</div>';
+        
+        const response = await fetch('/api/user/ratings', {
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('token')}`
+            }
+        });
+        
+        if (!response.ok) {
+            // Amélioration du message d'erreur
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.detail || `Erreur ${response.status}: ${response.statusText}`);
+        }
+        
+        const userRatings = await response.json();
+        console.log("Réponse API des évaluations:", userRatings); // Debug
+        
+        // Validation des données
+        if (!Array.isArray(userRatings)) {
+            throw new Error('Réponse API invalide: les évaluations ne sont pas un tableau');
+        }
+        
+        ratingsContainer.innerHTML = '';
+        
+        if (userRatings.length === 0) {
+            ratingsContainer.innerHTML = `
+                <div class="empty-state">
+                    <p>Vous n'avez pas encore évalué de jeux.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Créer les cartes d'évaluation avec validation robuste
+        userRatings.forEach(rating => {
+            // Validation des propriétés essentielles
+            if (!rating || typeof rating !== 'object') {
+                console.warn('Évaluation invalide:', rating);
+                return;
+            }
+            
+            // Utiliser des valeurs par défaut pour les propriétés manquantes
+            const game = rating.game || {};
+            const gameId = game.id || rating.game_id || 'inconnu';
+            const gameTitle = game.title || 'Jeu inconnu';
+            const ratingValue = rating.value || 0;
+            const createdAt = rating.created_at ? new Date(rating.created_at) : new Date();
+            
+            const formattedDate = `${createdAt.toLocaleDateString()} à ${createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
+            const avgRating = game.rating_avg || 0;
+            
+            const ratingCard = document.createElement('div');
+            ratingCard.className = 'rating-card';
+            ratingCard.innerHTML = `
+                <div class="rating-header">
+                    <span class="rating-game">${gameTitle}</span>
+                    <span class="rating-date">${formattedDate}</span>
+                </div>
+                <div class="rating-content">
+                    <div class="user-rating">
+                        <span>Votre note:</span>
+                        <div class="stars" 
+                             data-game-id="${gameId}" 
+                             data-rating="${ratingValue}">
+                        </div>
+                    </div>
+                    <div class="avg-rating">
+                        <span>Note moyenne:</span>
+                        <div class="stars">${createStars(avgRating)}</div>
                     </div>
                 </div>
             `;
             
-            // Add click handler to navigate to game details
-            gameCard.addEventListener('click', () => {
-                window.location.href = `/game/${game.id}`;
+            ratingCard.addEventListener('click', () => {
+                window.location.href = `/game/${gameId}`;
             });
             
-            purchasedGamesContainer.appendChild(gameCard);
+            ratingsContainer.appendChild(ratingCard);
         });
+        
+        // Ajouter les étoiles interactives
+        setupRatingStarsInProfile();
+        
     } catch (error) {
-        console.error('Error loading purchases:', error);
-        purchasedGamesContainer.innerHTML = `
-            <div class="empty-state">
-                <p>Une erreur s'est produite lors du chargement de vos jeux.</p>
-                <p>Veuillez réessayer plus tard.</p>
-            </div>
-        `;
-    }
-}
-
-// Load user ratings from server or mock data
-async function loadUserRatings() {
-    const ratingsContainer = document.getElementById('user-ratings');
-    
-    try {
-        // In a real application, this would be a fetch request to your API
-        // For this demo, we'll simulate an API response with mock data
-        const mockApiResponse = await simulateApiCall('/api/user/ratings', 1500);
-        
-        // Clear loading state
-        ratingsContainer.innerHTML = '';
-        
-        if (mockApiResponse.length === 0) {
-            // Show empty state
-            ratingsContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>Vous n'avez pas encore évalué de jeux.</p>
-                    <p>Notez vos jeux pour aider les autres joueurs!</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Create rating items
-        mockApiResponse.forEach(rating => {
-            const ratingItem = document.createElement('div');
-            ratingItem.className = 'rating-item';
-            ratingItem.innerHTML = `
-                <div class="rating-game-cover" style="background-color: ${rating.game.image}"></div>
-                <div class="rating-details">
-                    <h4 class="rating-game-title">${rating.game.title}</h4>
-                    <div class="rating-date">${rating.date}</div>
-                    <div class="rating-stars">${'★'.repeat(rating.rating)}${'☆'.repeat(5 - rating.rating)}</div>
-                </div>
-            `;
-            
-            // Add click handler to navigate to game details
-            ratingItem.addEventListener('click', () => {
-                window.location.href = `/game/${rating.game.id}`;
-            });
-            
-            ratingsContainer.appendChild(ratingItem);
-        });
-    } catch (error) {
-        console.error('Error loading ratings:', error);
+        console.error('Erreur lors du chargement des évaluations:', error);
         ratingsContainer.innerHTML = `
-            <div class="empty-state">
-                <p>Une erreur s'est produite lors du chargement de vos évaluations.</p>
-                <p>Veuillez réessayer plus tard.</p>
+            <div class="error">
+                <p>Erreur de chargement des évaluations</p>
+                <p>${error.message}</p>
+                <button class="retry-btn" onclick="loadUserRatings()">Réessayer</button>
             </div>
         `;
     }
 }
 
-// Load user forum messages from server or mock data
-async function loadUserMessages() {
-    const messagesContainer = document.getElementById('user-messages');
+// Fonction utilitaire pour créer les étoiles avec validation
+function createStars(rating) {
+    // S'assurer que rating est un nombre
+    const numericRating = Number(rating) || 0;
+    const roundedRating = Math.min(5, Math.max(0, Math.round(numericRating)));
+    return '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
+}
+
+// Fonction pour configurer les étoiles dans le profil
+function setupRatingStarsInProfile() {
+    const starsContainers = document.querySelectorAll('.user-rating .stars');
     
-    try {
-        // In a real application, this would be a fetch request to your API
-        // For this demo, we'll simulate an API response with mock data
-        const mockApiResponse = await simulateApiCall('/api/user/messages', 2000);
+    starsContainers.forEach(starsContainer => {
+        const gameId = starsContainer.dataset.gameId;
+        const userRating = parseInt(starsContainer.dataset.rating) || 0;
         
-        // Clear loading state
-        messagesContainer.innerHTML = '';
+        // Nettoyer le conteneur
+        starsContainer.innerHTML = '';
         
-        if (mockApiResponse.length === 0) {
-            // Show empty state
-            messagesContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>Vous n'avez pas encore posté de messages.</p>
-                    <p>Rejoignez les discussions dans les forums de jeux!</p>
-                </div>
-            `;
-            return;
+        // Créer les étoiles avec validation
+        for (let i = 1; i <= 5; i++) {
+            const star = document.createElement('span');
+            star.className = 'star';
+            star.textContent = i <= userRating ? '★' : '☆';
+            star.dataset.value = i;
+            starsContainer.appendChild(star);
         }
-        
-        // Create message items
-        mockApiResponse.forEach(message => {
-            const messageItem = document.createElement('div');
-            messageItem.className = 'message-item';
-            messageItem.innerHTML = `
-                <div class="message-header">
-                    <div class="message-game">${message.game.title}</div>
-                    <div class="message-date">${message.date}</div>
-                </div>
-                <p class="message-content">${message.content}</p>
-            `;
-            
-            // Add click handler to navigate to game forum
-            messageItem.addEventListener('click', () => {
-                window.location.href = `/game/${message.game.id}`;
-            });
-            
-            messagesContainer.appendChild(messageItem);
-        });
-    } catch (error) {
-        console.error('Error loading messages:', error);
-        messagesContainer.innerHTML = `
-            <div class="empty-state">
-                <p>Une erreur s'est produite lors du chargement de vos messages.</p>
-                <p>Veuillez réessayer plus tard.</p>
-            </div>
-        `;
-    }
-}
-
-// Helper function to simulate API calls
-function simulateApiCall(endpoint, delay = 1000) {
-    return new Promise((resolve) => {
-        setTimeout(() => {
-            // Mock data based on endpoint
-            if (endpoint.includes('purchases')) {
-                resolve([
-                    { id: 1, title: 'Cyberpunk 2077', category: 'RPG', image: '#4a2c82', rating: 4 },
-                    { id: 2, title: 'FIFA 2025', category: 'Sports', image: '#2c824a', rating: 3 },
-                    { id: 3, title: 'Call of Duty: Future Warfare', category: 'FPS', image: '#822c2c', rating: 5 },
-                    { id: 4, title: 'Minecraft Universe', category: 'Sandbox', image: '#2c6982', rating: 4 },
-                    { id: 5, title: 'Assassin\'s Creed: Quantum', category: 'Action/Adventure', image: '#565682', rating: null }
-                ]);
-            } else if (endpoint.includes('ratings')) {
-                resolve([
-                    { 
-                        game: { id: 1, title: 'Cyberpunk 2077', image: '#4a2c82' },
-                        rating: 4,
-                        date: '14 avril 2025'
-                    },
-                    { 
-                        game: { id: 2, title: 'FIFA 2025', image: '#2c824a' },
-                        rating: 3,
-                        date: '10 avril 2025'
-                    },
-                    { 
-                        game: { id: 3, title: 'Call of Duty: Future Warfare', image: '#822c2c' },
-                        rating: 5,
-                        date: '5 avril 2025'
-                    },
-                    { 
-                        game: { id: 4, title: 'Minecraft Universe', image: '#2c6982' },
-                        rating: 4,
-                        date: '1 avril 2025'
-                    }
-                ]);
-            } else if (endpoint.includes('messages')) {
-                resolve([
-                    {
-                        id: 1,
-                        game: { id: 1, title: 'Cyberpunk 2077' },
-                        content: 'Comment débloque-t-on la fin secrète ? J\'ai essayé plusieurs méthodes mais aucune ne fonctionne...',
-                        date: 'Hier à 15:30'
-                    },
-                    {
-                        id: 2,
-                        game: { id: 3, title: 'Call of Duty: Future Warfare' },
-                        content: 'Le nouveau mode zombie est incroyable ! Qui veut faire équipe pour essayer de battre le record ?',
-                        date: '15 avril 2025'
-                    },
-                    {
-                        id: 3,
-                        game: { id: 4, title: 'Minecraft Universe' },
-                        content: 'J\'ai créé un serveur pour construire une réplique de Paris, rejoignez-moi si ça vous intéresse !',
-                        date: '10 avril 2025'
-                    }
-                ]);
-            } else {
-                resolve([]);
-            }
-        }, delay);
     });
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

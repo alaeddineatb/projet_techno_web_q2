@@ -7,7 +7,6 @@
 </head>
 <body>
     <div class="container">
-        <!-- Étape 1 : Email -->
         <div class="form-container" id="step-email">
             <form id="emailForm" class="form-step">
                 <h2>Mot de passe oublié ?</h2>
@@ -17,7 +16,7 @@
             </form>
         </div>
 
-        <!-- Étape 2 : Code -->
+
         <div class="form-container hidden" id="step-code">
             <form id="codeForm" class="form-step">
                 <h2>Vérification</h2>
@@ -27,7 +26,6 @@
             </form>
         </div>
 
-        <!-- Étape 3 : Nouveau mot de passe -->
         <div class="form-container hidden" id="step-password">
             <form id="passwordForm" class="form-step">
                 <h2>Nouveau mot de passe</h2>
@@ -63,7 +61,7 @@
             }
         }
 
-        // Gestionnaire unique pour toutes les étapes
+
         document.addEventListener('submit', async (e) => {
             e.preventDefault();
 

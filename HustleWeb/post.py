@@ -178,40 +178,31 @@ async def add_new_game(
 
 
 
-# Dans post.py
 @router.post("/purchase/{game_id}")
-async def purchase_game(game_id: int, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
-    print(f"\n=== TENTATIVE D'ACHAT ===")
-    print(f"User ID: {current_user.user_id} | Game ID: {game_id}")
-
-    # Vérifie si le jeu existe
+async def purchase_game(
+    game_id: int, 
+    db: Session = Depends(get_db), 
+    current_user: User = Depends(get_current_user)
+):
     game = db.query(Game).filter(Game.game_id == game_id).first()
-    print(f"Jeu trouvé : {bool(game)}")  # Debug 1
-
     if not game:
-        print("❌ ERREUR: Jeu non trouvé en BDD")
         raise HTTPException(404, "Jeu introuvable")
 
-    # Crée l'achat
     try:
-        new_purchase = create_purchase(db,
+        new_purchase = Purchase(
             user_id=current_user.user_id,
             game_id=game_id,
-            price=game.price
+            price=game.price,
+            purchase_date=datetime.now(timezone.utc)
         )
         db.add(new_purchase)
         db.commit()
-        print(f"✅ Achat réussi - ID: {new_purchase.purchase_id}")  # Debug 2
         return {"status": "success"}
-
     except Exception as e:
-        return JSONResponse(  # Force une réponse JSON en cas d'erreur
+        return JSONResponse(
             status_code=500,
             content={"detail": f"Erreur serveur: {str(e)}"}
         )
-    
-
-
 @router.get("/games/{game_id}")
 async def get_game(game_id: int, db: Session = Depends(get_db)):
     game = db.query(Game).filter(Game.game_id == game_id).first()
@@ -312,47 +303,54 @@ async def reset_password(
 
 
 @router.post("/games/rate")
-async def rate_game(
-    rating_data: RatingRequest,
+async def noter_jeu(
+    evaluation: RatingRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    utilisateur: User = Depends(get_current_user)
 ):
-    try:
-        game_id = rating_data.game_id
-        rating_value = rating_data.rating
 
-        # 1. Vérifier l'achat
-        purchase = db.query(Purchase).filter(
-            Purchase.user_id == current_user.user_id,
-            Purchase.game_id == game_id
-        ).first()
-        
-        if not purchase:
-            raise HTTPException(403, "Achat requis pour noter")
+    jeu = db.get(Game, evaluation.game_id)
+    if not jeu:
+        raise HTTPException(404, "Jeu introuvable")
 
-        # 2. Créer/Mettre à jour la note
-        existing_rating = db.query(Rating).filter(
-            Rating.user_id == current_user.user_id,
-            Rating.game_id == game_id
-        ).first()
+    achat_existe = db.query(
+        db.query(Purchase).filter(
+            Purchase.user_id == utilisateur.user_id,
+            Purchase.game_id == evaluation.game_id
+        ).exists()
+    ).scalar()
+    
+    if not achat_existe:
+        raise HTTPException(403, "Achat requis pour noter ce jeu")
 
-        if existing_rating:
-            existing_rating.value = rating_value
-        else:
-            new_rating = Rating(
-                user_id=current_user.user_id,
-                game_id=game_id,
-                value=rating_value
-            )
-            db.add(new_rating)
-        
-   
-        game = db.query(Game).get(game_id)
-        ratings = [r.value for r in game.ratings]
-        game.rating_avg = sum(ratings)/len(ratings) if ratings else 0
-        
-        db.commit()
-        return {"success": True}
+    evaluation_existante = db.query(Rating).filter(
+        Rating.user_id == utilisateur.user_id,
+        Rating.game_id == evaluation.game_id
+    ).first()
 
-    except KeyError:
-        raise HTTPException(400, "Données invalides")
+ 
+    if evaluation_existante:
+        evaluation_existante.value = evaluation.rating
+        action = "mise à jour"
+    else:
+        nouvelle_evaluation = Rating(
+            user_id=utilisateur.user_id,
+            game_id=evaluation.game_id,
+            value=evaluation.rating
+        )
+        db.add(nouvelle_evaluation)
+        action = "ajoutée"
+
+    # Calcul dynamique de la nouvelle moyenne
+    notes = [r.value for r in jeu.ratings]
+    if not evaluation_existante and not notes:
+        notes.append(evaluation.rating)
+    jeu.rating_avg = sum(notes) / len(notes)
+
+    db.commit()
+    
+    return {
+        "success": True,
+        "message": f"Note {action} avec succès",
+        "nouvelle_moyenne": jeu.rating_avg
+    }

@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // First make sure authentication is checked and navigation is updated
-    checkAuth(); // Use the function from script.js
+
+    checkAuth(); 
     
-    // Then load games and set up event listeners
+
     loadGames();
     setupEventListeners();
 });
@@ -25,7 +25,7 @@ function displayGames(featuredGames, gameCategories) {
         `;
     });
     
-    // Set up click handlers for game cards
+
     document.querySelectorAll('.game-card').forEach(card => {
         card.addEventListener('click', function() {
             const gameId = this.getAttribute('data-game-id');
@@ -49,7 +49,7 @@ function setupEventListeners() {
         });
     }
     
-    // Set up filter change listeners
+ 
     const genreFilter = document.getElementById('genre-filter');
     const platformFilter = document.getElementById('platform-filter');
     const sortBy = document.getElementById('sort-by');
@@ -60,7 +60,7 @@ function setupEventListeners() {
         sortBy.addEventListener('change', filterGames);
     }
     
-    // Add delegation for game card clicks
+ 
     const categoriesContainer = document.getElementById('game-categories-container');
     if (categoriesContainer) {
         categoriesContainer.addEventListener('click', function(e) {
@@ -107,11 +107,12 @@ function displaySearchResults(results, searchTerm) {
     });
 }
 
-// Load games from window.gamesData
+
 function loadGames() {
-    console.log("Loading games data...");
+    console.log("All games data:", window.allGames);
+    console.log("Game categories:", window.gameCategories);
     
-    // Ensure we have access to the games data
+
     if (!window.allGames || !window.featuredGames || !window.gameCategories) {
         console.error("Game data not available. Make sure games-data.js is loaded correctly.");
         return;
@@ -173,11 +174,17 @@ function filterGames() {
     let filtered = [...window.allGames];
     
     if (genreFilter) {
-        filtered = filtered.filter(game => game.category === genreFilter);
+        filtered = filtered.filter(game => 
+            game.category.toLowerCase() === genreFilter.toLowerCase()
+        );
     }
     
     if (platformFilter) {
-        filtered = filtered.filter(game => game.platforms.includes(platformFilter));
+        filtered = filtered.filter(game => {
+            const platforms = game.platforms.split(',')
+                .map(p => p.trim().toLowerCase());
+            return platforms.includes(platformFilter.toLowerCase());
+        });
     }
     
     // Sort results

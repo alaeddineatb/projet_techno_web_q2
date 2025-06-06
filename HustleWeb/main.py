@@ -14,14 +14,14 @@ app = FastAPI(title="HustleWeb",
              version="1.0.0")
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # À adapter en production
+    allow_origins=["*"],  
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 app.include_router(views_router)
 app.include_router(post_router)
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))  # Chemin DIRECT vers Hustle/
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))  
 STATIC_DIR = os.path.join(BASE_DIR, "static")
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 print("[DEBUG] Chemin static :", STATIC_DIR)  

@@ -62,25 +62,29 @@ class Purchase(Base):
     __tablename__ = "purchases"
 
     purchase_id: Mapped[int] = mapped_column(primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))  # 'users' avec 's'
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"))  # 'games' avec 's'
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"))  
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"))  
+    price: Mapped[float] = mapped_column(Float, default=0.0)
+    purchase_date: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True),
+        default=lambda: datetime.now(timezone.utc)
+    )
     user: Mapped["User"] = relationship(back_populates="purchases")
     game: Mapped["Game"] = relationship(back_populates="purchases")
-    price: Mapped[float] = mapped_column(Float, default=0.0)
 
 
 class Message(Base):
     __tablename__ = "messages"
 
     message_id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)  # 'users' avec 's'
-    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"), nullable=False)  # 'games' avec 's'
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.user_id"), nullable=False)  
+    game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"), nullable=False)  
     content: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
     user: Mapped["User"] = relationship(back_populates="messages")
     game: Mapped["Game"] = relationship(back_populates="messages")
 
-# Configuration de la base de données
+
 import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "game_store.db")

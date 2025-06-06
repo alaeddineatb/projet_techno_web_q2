@@ -70,13 +70,22 @@ function loadGameDetails(gameId) {
 }
 
 function setupRatingStars() {
-    const stars = document.querySelectorAll('#rating-stars span');
-    stars.forEach(star => {
-        star.addEventListener('click', function() {
-            const value = parseInt(this.getAttribute('data-value'));
-            stars.forEach((s, index) => {
-                s.classList.toggle('active', index < value);
-            });
+    const container = document.getElementById('rating-stars');
+    if (!container) return;
+    
+    const stars = container.querySelectorAll('span');
+    
+    container.addEventListener('click', (e) => {
+        if (!e.target.matches('span')) return;
+        
+        const clickedValue = parseInt(e.target.getAttribute('data-value'));
+        
+        stars.forEach((star, index) => {
+            if (index < clickedValue) {
+                star.classList.add('active');
+            } else {
+                star.classList.remove('active');
+            }
         });
     });
 }
@@ -136,21 +145,21 @@ function hideAllModals() {
     document.body.style.overflow = 'auto'; // Re-enable scrolling
 }
 
+
 async function submitRating(gameId) {
-    // Check if user is logged in first
     if (!isUserAuthenticated()) {
         showModal('login-required-modal');
         return;
     }
     
     try {
-        const selectedStar = document.querySelector('#rating-stars span.active:last-child');
-        if (!selectedStar) {
+        const activeStars = document.querySelectorAll('#rating-stars span.active');
+        if (activeStars.length === 0) {
             alert('Veuillez sélectionner une note');
             return;
         }
         
-        const rating = parseInt(selectedStar.getAttribute('data-value'));
+        const rating = activeStars.length;
         
         const response = await fetch(`/games/rate`, {
             method: 'POST',
@@ -158,14 +167,27 @@ async function submitRating(gameId) {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${localStorage.getItem('token')}`
             },
-            body: JSON.stringify({ game_id: gameId, rating: rating })
+            body: JSON.stringify({ 
+                game_id: Number(gameId),
+                rating: rating 
+            })
         });
         
+        const result = await response.json();
+        
         if (response.ok) {
-            alert('Note envoyée!');
-        } else {
-            const errorText = await response.text();
-            alert('Erreur lors de l\'envoi: ' + errorText);
+            alert(result.message);
+            document.getElementById('game-rating').textContent = result.new_rating.toFixed(1);
+            
+            // Réinitialiser les étoiles
+            setTimeout(() => {
+                document.querySelectorAll('#rating-stars span.active').forEach(star => {
+                    star.classList.remove('active');
+                });
+            }, 2000);
+        } 
+        else {
+            alert('Erreur: ' + (result.detail || 'Une erreur est survenue'));
         }
     } catch (error) {
         console.error('Rating error:', error);
@@ -277,21 +299,21 @@ function setupCardInputFormatting() {
     }
 }
 
-// Forum/Chat functionality
+
 function setupForumChat(gameId) {
     const isLoggedIn = isUserAuthenticated();
     const sendButton = document.getElementById('send-message');
     const messageInput = document.getElementById('message-input');
     const loginNotice = document.querySelector('.login-required-notice');
     
-    // Show/hide appropriate elements based on login status
+
     if (!isLoggedIn) {
         sendButton.disabled = true;
         messageInput.disabled = true;
         messageInput.placeholder = "Connectez-vous pour participer...";
         loginNotice.style.display = 'block';
     } else {
-        // Set up message sending functionality
+
         sendButton.addEventListener('click', () => sendForumMessage(gameId));
         messageInput.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -301,7 +323,7 @@ function setupForumChat(gameId) {
         });
     }
     
-    // Load existing messages
+
     loadForumMessages(gameId);
 }
 
@@ -393,7 +415,7 @@ async function sendForumMessage(gameId) {
             throw new Error(data.detail || "Erreur lors de l'envoi");
         }
 
-        // Recharge les messages si succès
+    
         await loadForumMessages(gameId);
         messageInput.value = '';
 
@@ -436,7 +458,6 @@ function timeSince(dateString) {
 
     const seconds = Math.floor((nowUTC - dateUTC) / 1000);
     
-    // 4. Détection précise des intervalles
     const intervals = {
         année: 31536000,
         mois:  2592000,
@@ -445,7 +466,7 @@ function timeSince(dateString) {
         minute:    60
     };
 
-    // 5. Trouver le plus grand intervalle
+
     let largestUnit = 'seconde';
     let largestValue = 0;
     
@@ -454,11 +475,11 @@ function timeSince(dateString) {
         if (interval >= 1) {
             largestUnit = unit;
             largestValue = interval;
-            break; // Prend le premier intervalle valide
+            break; 
         }
     }
 
-    // 6. Formatage intelligent
+
     if (largestUnit === 'seconde') {
         return 'à l\'instant';
     }

@@ -106,10 +106,10 @@ def initialize_sample_games(db: Session):
 
 
 def get_current_user(
-    token: str = Cookie(default=None, alias="token"),  # À adapter
+    token: str = Cookie(default=None, alias="token"),  
     db: Session = Depends(get_db)
 ) -> User:
-    print(f"🔑 Token reçu: {token}")  # Debug 1
+    print(f"🔑 Token reçu: {token}")  
     
     if not token:
         print("❌ Aucun token trouvé dans les cookies")

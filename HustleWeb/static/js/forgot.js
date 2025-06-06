@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const codeSection = document.getElementById('code-section');
 
     document.getElementById('forgot-form').addEventListener('submit', async (e) => {
-        e.preventDefault();  // Bloque le comportement par défaut
+        e.preventDefault(); 
         
         const email = document.getElementById('email').value;
         
@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const response = await fetch('/forgot', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email })  // Envoi en JSON
+                body: JSON.stringify({ email }) 
             });
             
             if (response.ok) {
@@ -44,7 +44,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Réinitialisation du mot de passe
             const resetResponse = await fetch('/reset-password', {
                 method: 'POST',
                 headers: {

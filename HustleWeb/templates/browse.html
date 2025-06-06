@@ -12,7 +12,6 @@
     <div class="header">
         <h1>🎮 GamerZone 🎮</h1>
         <nav id="nav-links">
-            <!-- Navigation will be dynamically populated by script.js -->
         </nav>
     </div>
 
@@ -25,21 +24,21 @@
         <div class="filter-container">
             <select id="genre-filter">
                 <option value="">All Genres</option>
-                <option value="action">Action</option>
-                <option value="adventure">Adventure</option>
-                <option value="rpg">RPG</option>
-                <option value="strategy">Strategy</option>
-                <option value="sports">Sports</option>
-                <option value="racing">Racing</option>
+                <option value="Action">Action</option>
+                <option value="Adventure">Adventure</option>
+                <option value="RPG">RPG</option>
+                <option value="Strategy">Strategy</option>
+                <option value="Sports">Sports</option>
+                <option value="Racing">Racing</option>
             </select>
             
             <select id="platform-filter">
                 <option value="">All Platforms</option>
-                <option value="pc">PC</option>
-                <option value="playstation">PlayStation</option>
-                <option value="xbox">Xbox</option>
-                <option value="nintendo">Nintendo</option>
-                <option value="mobile">Mobile</option>
+                <option value="PC">PC</option>
+                <option value="Playstation">PlayStation</option>
+                <option value="Xbox">Xbox</option>
+                <option value="Nintendo">Nintendo</option>
+                <option value="Mobile">Mobile</option>
             </select>
             
             <select id="sort-by">
@@ -53,12 +52,11 @@
         <div class="featured-games">
             <h2>Featured Games</h2>
             <div class="game-carousel" id="featured-games-container">
-                <!-- Featured games will be inserted here -->
+
             </div>
         </div>
         
         <div id="game-categories-container">
-            <!-- Game categories will be inserted here -->
         </div>
     </div>
 
@@ -71,12 +69,12 @@
         </div>
     </div>
 
-    <!-- Data initialization script -->
+
     <script>
         window.gamesData = JSON.parse('{{ games_data|safe }}');
     </script>
     
-    <!-- Load core scripts first -->
+
     <script src="/static/js/script.js"></script>
     <script src="/static/js/games-data.js"></script>
     <script src="/static/js/browse.js"></script>
