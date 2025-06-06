@@ -102,47 +102,67 @@ body {
     margin: 0 0 10px 0;
     padding-bottom: 10px;
     border-bottom: 1px solid #00ff00;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.5);
 }
 
 .user-stats {
     color: #999;
     font-size: 0.9rem;
     margin: 0 0 20px 0;
+    font-style: italic;
 }
 
-/* Profile tabs styles */
+/* Profile tabs styles - Style plus tabloïde */
 .profile-tabs {
     display: flex;
     justify-content: center;
-    border-bottom: 1px solid #333;
+    border-bottom: 2px solid #333;
     width: 100%;
     margin-bottom: 0;
+    background: linear-gradient(to bottom, #222, #1a1a1a);
+    border-radius: 8px 8px 0 0;
+    padding: 5px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.4);
 }
 
 .tab-button {
-    background: none;
-    border: none;
-    padding: 12px 20px;
+    background: linear-gradient(to bottom, #333, #222);
+    border: 1px solid #444;
+    padding: 12px 25px;
     color: #ccc;
     font-size: 1rem;
-    font-weight: 500;
+    font-weight: 700;
     cursor: pointer;
     transition: all 0.3s;
     position: relative;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin: 0 5px;
+    border-radius: 5px 5px 0 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
 .tab-button:hover {
-    color: #00ff00;
+    color: #fff;
+    background: linear-gradient(to bottom, #444, #333);
+    border-color: #00ff00;
 }
 
 .tab-button.active {
     color: #00ff00;
+    background: linear-gradient(to bottom, #1a1a1a, #121212);
+    border-color: #00ff00;
+    border-bottom: none;
+    box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
+    z-index: 2;
 }
 
 .tab-button.active::after {
     content: '';
     position: absolute;
-    bottom: -1px;
+    bottom: -2px;
     left: 0;
     right: 0;
     height: 3px;
@@ -150,14 +170,19 @@ body {
     border-radius: 3px 3px 0 0;
 }
 
-/* Tab content styles */
 .tab-content {
     width: 100%;
+    background: #1a1a1a;
+    border: 1px solid #333;
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
 }
 
 .tab-pane {
     display: none;
-    padding: 20px 0;
+    padding: 20px;
 }
 
 .tab-pane.active {
@@ -175,9 +200,13 @@ body {
     margin-top: 0;
     margin-bottom: 20px;
     font-size: 1.4rem;
+    border-bottom: 2px solid #333;
+    padding-bottom: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 0 0 5px rgba(0, 255, 0, 0.3);
 }
 
-/* Games grid styles */
 .games-grid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -186,15 +215,30 @@ body {
 }
 
 .game-card {
-    background: #222;
+    background: linear-gradient(to bottom, #222, #1a1a1a);
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.3s, box-shadow 0.3s;
+    border: 1px solid #333;
+    position: relative;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.4);
 }
 
 .game-card:hover {
     transform: translateY(-5px);
-    box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 8px 20px rgba(0, 255, 0, 0.4);
+    border-color: #00ff00;
+}
+
+.game-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: #00ff00;
+    opacity: 0.7;
 }
 
 .game-cover {
@@ -202,28 +246,38 @@ body {
     background-color: #333;
     background-size: cover;
     background-position: center;
+    border-bottom: 1px solid #444;
 }
 
 .game-info {
-    padding: 12px;
+    padding: 15px;
 }
 
 .game-info h4 {
     margin: 0 0 5px 0;
     color: #00ff00;
-    font-size: 1rem;
+    font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 3px rgba(0,255,0,0.5);
 }
 
 .game-info p {
     margin: 0;
     font-size: 0.8rem;
-    color: #999;
+    color: #aaa;
+    font-style: italic;
 }
 
 .game-rating {
-    margin-top: 5px;
+    display: inline-block;
+    margin-top: 8px;
+    padding: 3px 8px;
+    background: rgba(0, 255, 0, 0.1);
     color: #00ff00;
     font-size: 0.9rem;
+    border-radius: 4px;
+    border: 1px solid rgba(0, 255, 0, 0.3);
 }
 
 /* Ratings list styles */
@@ -237,10 +291,15 @@ body {
     padding: 15px;
     border-bottom: 1px solid #333;
     transition: background-color 0.3s;
+    background: linear-gradient(to right, #1a1a1a, #222);
+    border-radius: 5px;
+    margin-bottom: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
 }
 
 .rating-item:hover {
-    background-color: #222;
+    background: linear-gradient(to right, #222, #2a2a2a);
+    border-left: 3px solid #00ff00;
 }
 
 .rating-game-cover {
@@ -251,6 +310,7 @@ body {
     background-position: center;
     border-radius: 5px;
     margin-right: 15px;
+    border: 1px solid #444;
 }
 
 .rating-details {
@@ -261,19 +321,23 @@ body {
     margin: 0 0 5px 0;
     color: #00ff00;
     font-size: 1.1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
 .rating-date {
     font-size: 0.8rem;
     color: #777;
+    font-style: italic;
 }
 
 .rating-stars {
     font-size: 1.2rem;
     color: #00ff00;
+    text-shadow: 0 0 5px rgba(0,255,0,0.5);
 }
 
-/* Messages/Forum styles */
+/* Messages/Forum styles - Style tabloïde */
 .forum-activity {
     width: 100%;
 }
@@ -282,31 +346,61 @@ body {
     padding: 15px;
     border-bottom: 1px solid #333;
     transition: background-color 0.3s;
+    background: linear-gradient(to right, #1a1a1a, #222);
+    border-radius: 5px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    border-left: 3px solid #444;
+    position: relative;
 }
 
 .message-item:hover {
-    background-color: #222;
+    background: linear-gradient(to right, #222, #2a2a2a);
+    border-left-color: #00ff00;
+    transform: translateX(5px);
+}
+
+.message-item::before {
+    content: '»';
+    position: absolute;
+    left: 5px;
+    top: 15px;
+    color: #00ff00;
+    font-size: 1.5rem;
+    opacity: 0.5;
 }
 
 .message-header {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
+    align-items: center;
 }
 
 .message-game {
-    font-weight: 600;
+    font-weight: 700;
     color: #00ff00;
+    text-transform: uppercase;
+    font-size: 1.1rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 3px rgba(0,255,0,0.3);
 }
 
 .message-date {
     font-size: 0.8rem;
     color: #777;
+    background: rgba(0,0,0,0.3);
+    padding: 3px 8px;
+    border-radius: 12px;
 }
 
 .message-content {
     margin: 0;
-    line-height: 1.4;
+    line-height: 1.5;
+    color: #ddd;
+    font-style: italic;
+    padding-left: 15px;
+    border-left: 2px solid #444;
 }
 
 /* Loading state */
@@ -322,27 +416,37 @@ body {
     text-align: center;
     padding: 30px;
     color: #666;
+    background: rgba(30,30,30,0.5);
+    border-radius: 8px;
+    border: 1px dashed #444;
 }
 
 .empty-state p {
     margin: 10px 0;
+    font-size: 1.1rem;
 }
 
 .cta-button {
     display: inline-block;
-    background: #00ff00;
+    background: linear-gradient(to bottom, #00cc00, #00aa00);
     color: #121212;
-    padding: 8px 16px;
+    padding: 10px 20px;
     border-radius: 5px;
     text-decoration: none;
-    font-weight: 500;
+    font-weight: 700;
     margin-top: 15px;
     transition: transform 0.3s, box-shadow 0.3s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.4);
 }
 
 .cta-button:hover {
     transform: translateY(-3px);
-    box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+    box-shadow: 0 5px 15px rgba(0, 255, 0, 0.5);
+    background: linear-gradient(to bottom, #00ff00, #00cc00);
 }
 
 @media (max-width: 768px) {
@@ -358,6 +462,7 @@ body {
     .tab-button {
         padding: 10px 15px;
         font-size: 0.9rem;
+        margin: 5px;
     }
     
     .games-grid {

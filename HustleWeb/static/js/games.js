@@ -179,7 +179,7 @@ async function submitRating(gameId) {
             alert(result.message);
             document.getElementById('game-rating').textContent = result.new_rating.toFixed(1);
             
-            // Réinitialiser les étoiles
+
             setTimeout(() => {
                 document.querySelectorAll('#rating-stars span.active').forEach(star => {
                     star.classList.remove('active');
@@ -191,7 +191,6 @@ async function submitRating(gameId) {
         }
     } catch (error) {
         console.error('Rating error:', error);
-        alert('Erreur lors de l\'envoi. Veuillez réessayer.');
     }
 }
 
@@ -203,7 +202,7 @@ async function processPayment(event, gameId) {
     const cardExpiry = document.getElementById('card-expiry').value;
     const cardCvv = document.getElementById('card-cvv').value;
     
-    // Validation basique
+
     if (!cardName || !cardNumber || !cardExpiry || !cardCvv) {
         alert('Veuillez remplir tous les champs');
         return;
@@ -214,7 +213,6 @@ async function processPayment(event, gameId) {
     confirmButton.textContent = 'Traitement...';
 
     try {
-        // Appel réel au backend
         const response = await fetch(`/purchase/${gameId}`, {
             method: 'POST',
             headers: {
@@ -225,7 +223,13 @@ async function processPayment(event, gameId) {
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.detail || "Échec de l'achat");
+            if (response.status === 400 && data.detail.includes("déjà")) {
+                hideAllModals();
+                showModal('already-purchased-modal');
+            } else {
+                throw new Error(data.detail || "Échec de l'achat");
+            }
+            return;
         }
 
         hideAllModals();

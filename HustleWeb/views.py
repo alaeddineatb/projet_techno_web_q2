@@ -185,45 +185,7 @@ async def get_user_messages(
         )
     
 
-@router.get("/api/user/ratings")
-async def get_user_ratings(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    try:
 
-        ratings = db.query(Rating).options(joinedload(Rating.game)).filter(
-            Rating.user_id == current_user.user_id
-        ).order_by(Rating.created_at.desc()).all()
-        
-        if not ratings:
-            return []
-
-
-        result = []
-        for rating in ratings:
-            result.append({
-                "rating_id": rating.rating_id,
-                "value": rating.value,
-                "created_at": rating.created_at.isoformat(),
-                "game": {
-                    "id": rating.game.game_id,
-                    "title": rating.game.title,
-                    "image": rating.game.image,
-                    "rating_avg": rating.game.rating_avg
-                }
-            })
-        
-        return result
-        
-    except Exception as e:
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(
-            status_code=500,
-            detail=f"Erreur serveur: {str(e)}"
-        )    
-    
 
 
 

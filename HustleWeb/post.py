@@ -187,6 +187,17 @@ async def purchase_game(
     game = db.query(Game).filter(Game.game_id == game_id).first()
     if not game:
         raise HTTPException(404, "Jeu introuvable")
+    
+    existing_purchase = db.query(Purchase).filter(
+        Purchase.user_id == current_user.user_id,
+        Purchase.game_id == game_id
+    ).first()
+    
+    if existing_purchase:
+        raise HTTPException(
+            status_code=400,
+            detail="Vous avez déjà acheté ce jeu"
+        )
 
     try:
         new_purchase = Purchase(
@@ -203,13 +214,6 @@ async def purchase_game(
             status_code=500,
             content={"detail": f"Erreur serveur: {str(e)}"}
         )
-@router.get("/games/{game_id}")
-async def get_game(game_id: int, db: Session = Depends(get_db)):
-    game = db.query(Game).filter(Game.game_id == game_id).first()
-    if not game:
-        raise HTTPException(status_code=404)
-    return game
-
 
 
 

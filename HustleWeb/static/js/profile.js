@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Load user data
     loadPurchasedGames();
-    loadUserRatings();
+
     loadUserMessages();
 });
 
@@ -53,10 +53,10 @@ function displayUserInfo() {
         profilePicElement.src = profilePicSrc;
     }
     
-    // Set joined date (mock data, in a real app this would come from the server)
+ 
     const memberSinceElement = document.getElementById('member-since');
     if (memberSinceElement) {
-        memberSinceElement.textContent = 'Mars 2025';
+        memberSinceElement.textContent = 'Juin 2025';
     }
 }
 
@@ -148,7 +148,7 @@ async function loadPurchasedGames() {
             return;
         }
         
-        // Créer les cartes de jeu
+
         purchasedGames.forEach(game => {
             const roundedRating = Math.round(game.rating_avg || 0);
             const stars = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
@@ -241,135 +241,7 @@ async function loadUserMessages() {
 
 
 
-async function loadUserRatings() {
-    const ratingsContainer = document.getElementById('user-ratings-container');
-    if (!ratingsContainer) return; // Garde contre les éléments manquants
-    
-    try {
-        ratingsContainer.innerHTML = '<div class="loader">Chargement de vos évaluations...</div>';
-        
-        const response = await fetch('/api/user/ratings', {
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
-        });
-        
-        if (!response.ok) {
-            // Amélioration du message d'erreur
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.detail || `Erreur ${response.status}: ${response.statusText}`);
-        }
-        
-        const userRatings = await response.json();
-        console.log("Réponse API des évaluations:", userRatings); // Debug
-        
-        // Validation des données
-        if (!Array.isArray(userRatings)) {
-            throw new Error('Réponse API invalide: les évaluations ne sont pas un tableau');
-        }
-        
-        ratingsContainer.innerHTML = '';
-        
-        if (userRatings.length === 0) {
-            ratingsContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>Vous n'avez pas encore évalué de jeux.</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Créer les cartes d'évaluation avec validation robuste
-        userRatings.forEach(rating => {
-            // Validation des propriétés essentielles
-            if (!rating || typeof rating !== 'object') {
-                console.warn('Évaluation invalide:', rating);
-                return;
-            }
-            
-            // Utiliser des valeurs par défaut pour les propriétés manquantes
-            const game = rating.game || {};
-            const gameId = game.id || rating.game_id || 'inconnu';
-            const gameTitle = game.title || 'Jeu inconnu';
-            const ratingValue = rating.value || 0;
-            const createdAt = rating.created_at ? new Date(rating.created_at) : new Date();
-            
-            const formattedDate = `${createdAt.toLocaleDateString()} à ${createdAt.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`;
-            const avgRating = game.rating_avg || 0;
-            
-            const ratingCard = document.createElement('div');
-            ratingCard.className = 'rating-card';
-            ratingCard.innerHTML = `
-                <div class="rating-header">
-                    <span class="rating-game">${gameTitle}</span>
-                    <span class="rating-date">${formattedDate}</span>
-                </div>
-                <div class="rating-content">
-                    <div class="user-rating">
-                        <span>Votre note:</span>
-                        <div class="stars" 
-                             data-game-id="${gameId}" 
-                             data-rating="${ratingValue}">
-                        </div>
-                    </div>
-                    <div class="avg-rating">
-                        <span>Note moyenne:</span>
-                        <div class="stars">${createStars(avgRating)}</div>
-                    </div>
-                </div>
-            `;
-            
-            ratingCard.addEventListener('click', () => {
-                window.location.href = `/game/${gameId}`;
-            });
-            
-            ratingsContainer.appendChild(ratingCard);
-        });
-        
-        // Ajouter les étoiles interactives
-        setupRatingStarsInProfile();
-        
-    } catch (error) {
-        console.error('Erreur lors du chargement des évaluations:', error);
-        ratingsContainer.innerHTML = `
-            <div class="error">
-                <p>Erreur de chargement des évaluations</p>
-                <p>${error.message}</p>
-                <button class="retry-btn" onclick="loadUserRatings()">Réessayer</button>
-            </div>
-        `;
-    }
-}
 
-// Fonction utilitaire pour créer les étoiles avec validation
-function createStars(rating) {
-    // S'assurer que rating est un nombre
-    const numericRating = Number(rating) || 0;
-    const roundedRating = Math.min(5, Math.max(0, Math.round(numericRating)));
-    return '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
-}
-
-// Fonction pour configurer les étoiles dans le profil
-function setupRatingStarsInProfile() {
-    const starsContainers = document.querySelectorAll('.user-rating .stars');
-    
-    starsContainers.forEach(starsContainer => {
-        const gameId = starsContainer.dataset.gameId;
-        const userRating = parseInt(starsContainer.dataset.rating) || 0;
-        
-        // Nettoyer le conteneur
-        starsContainer.innerHTML = '';
-        
-        // Créer les étoiles avec validation
-        for (let i = 1; i <= 5; i++) {
-            const star = document.createElement('span');
-            star.className = 'star';
-            star.textContent = i <= userRating ? '★' : '☆';
-            star.dataset.value = i;
-            starsContainer.appendChild(star);
-        }
-    });
-}
 
 
 

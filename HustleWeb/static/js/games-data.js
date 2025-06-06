@@ -61,7 +61,7 @@ const allGames = [
     }
 ];
 
-// Fonction utilitaire pour récupérer les jeux
+
 function getGames(category = null) {
     if (!category) return allGames;
     return allGames.filter(game => game.category === category);
