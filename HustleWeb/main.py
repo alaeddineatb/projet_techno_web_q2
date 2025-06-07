@@ -3,13 +3,12 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from views import router as views_router
 from post import router as post_router
-from pathlib import Path
 from initdb import init_db
 import os 
 from fastapi.middleware.cors import CORSMiddleware
 
 
-app = FastAPI(title="HustleWeb", 
+app = FastAPI(title="GamerZone", 
              description="Plateforme de jeux vidéo", 
              version="1.0.0")
 app.add_middleware(

@@ -1,13 +1,19 @@
-from datetime import datetime,timezone
+"""
+Modèles de base de données SQLAlchemy pour Game Store
+Définit les tables: User, Game, Purchase, Message, Rating
+"""
+from datetime import datetime, timezone
 from typing import Optional, List
 from sqlalchemy import create_engine, String, Integer, DateTime, ForeignKey, Float, Boolean, Text
-from sqlalchemy.orm import relationship, declarative_base, Mapped, mapped_column, sessionmaker, Session
+from sqlalchemy.orm import relationship, declarative_base, Mapped, mapped_column, sessionmaker
+import os
 
 Base = declarative_base()
 
-
 class Rating(Base):
+    """Évaluations des jeux par les utilisateurs (1-5 étoiles)"""
     __tablename__ = "ratings"
+    
     rating_id: Mapped[int] = mapped_column(Integer, primary_key=True)
     user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), nullable=False)
     game_id: Mapped[int] = mapped_column(Integer, ForeignKey("games.game_id"), nullable=False)
@@ -16,12 +22,12 @@ class Rating(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
+    
     user: Mapped["User"] = relationship(back_populates="ratings")
     game: Mapped["Game"] = relationship(back_populates="ratings")
 
-
 class User(Base):
-    """Modèle pour les utilisateurs"""
+    """Utilisateurs du système avec gestion admin et bannissement"""
     __tablename__ = "users"
 
     user_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
@@ -33,13 +39,13 @@ class User(Base):
     is_banned: Mapped[bool] = mapped_column(Boolean, default=False)
     last_login: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True))
     photo_url: Mapped[Optional[str]] = mapped_column(String(200), default="/static/photos/default.jpg")
+    
     purchases: Mapped[List["Purchase"]] = relationship(back_populates="user")
     messages: Mapped[List["Message"]] = relationship(back_populates="user")
     ratings: Mapped[List["Rating"]] = relationship(back_populates="user")
 
-
 class Game(Base):
-    """Modèle pour les jeux"""
+    """Catalogue des jeux avec métadonnées complètes"""
     __tablename__ = "games"
 
     game_id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -57,8 +63,8 @@ class Game(Base):
     messages: Mapped[List["Message"]] = relationship(back_populates="game")
     ratings: Mapped[List["Rating"]] = relationship(back_populates="game")
 
-
 class Purchase(Base):
+    """Historique des achats avec prix au moment de l'achat"""
     __tablename__ = "purchases"
 
     purchase_id: Mapped[int] = mapped_column(primary_key=True)
@@ -69,11 +75,12 @@ class Purchase(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
+    
     user: Mapped["User"] = relationship(back_populates="purchases")
     game: Mapped["Game"] = relationship(back_populates="purchases")
 
-
 class Message(Base):
+    """Messages de discussion pour chaque jeu"""
     __tablename__ = "messages"
 
     message_id: Mapped[int] = mapped_column(Integer, primary_key=True)
@@ -81,11 +88,10 @@ class Message(Base):
     game_id: Mapped[int] = mapped_column(ForeignKey("games.game_id"), nullable=False)  
     content: Mapped[str]
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=datetime.utcnow)
+    
     user: Mapped["User"] = relationship(back_populates="messages")
     game: Mapped["Game"] = relationship(back_populates="messages")
 
-
-import os
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 db_path = os.path.join(BASE_DIR, "game_store.db")
 DATABASE_URL = f"sqlite:///{db_path}"

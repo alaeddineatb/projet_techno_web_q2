@@ -146,49 +146,32 @@ function hideAllModals() {
 }
 
 async function submitRating(gameId) {
-    if (!isUserAuthenticated()) {
-        showModal('login-required-modal');
-        return;
-    }
-    
+    if (!isUserAuthenticated()) { showModal('login-required-modal'); return; }
+
+    const rating = document.querySelectorAll('#rating-stars span.active').length;
+    if (!rating) { alert('Veuillez sélectionner une note'); return; }
+
     try {
-        const activeStars = document.querySelectorAll('#rating-stars span.active');
-        if (activeStars.length === 0) {
-            alert('Veuillez sélectionner une note');
+        const response = await fetch('/games/rate', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ game_id: Number(gameId), rating })
+        });
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert('Erreur: ' + (result.detail || result.message || 'Une erreur est survenue'));
             return;
         }
-        
-        const rating = activeStars.length;
-        
-        const response = await fetch(`/games/rate`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
-            body: JSON.stringify({ 
-                game_id: Number(gameId),
-                rating: rating 
-            })
-        });
-        
-        const result = await response.json();
-        
-        if (response.ok) {
-            alert(result.message);
-            document.getElementById('game-rating').textContent = result.nouvelle_moyenne.toFixed(1);
-            
-            setTimeout(() => {
-                document.querySelectorAll('#rating-stars span.active').forEach(star => {
-                    star.classList.remove('active');
-                });
-            }, 2000);
-        } 
-        else {
-            alert('Erreur: ' + (result.detail || 'Une erreur est survenue'));
-        }
-    } catch (error) {
-        console.error('Rating error:', error);
+
+        alert(result.message);
+        document.getElementById('game-rating').textContent = result.new_average.toFixed(1);
+        setTimeout(() => document.querySelectorAll('#rating-stars span.active').forEach(s => s.classList.remove('active')), 2000);
+    } catch (err) {
+        console.error('Rating error:', err);
+        alert('Impossible de noter le jeu. Vérifiez votre connexion.');
     }
 }
 
@@ -210,11 +193,11 @@ async function processPayment(event, gameId) {
     confirmButton.textContent = 'Traitement...';
 
     try {
+        // ✅ FIXED: Use credentials instead of Authorization header
         const response = await fetch(`/purchase/${gameId}`, {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            }
+            credentials: 'include' // ✅ Uses cookies (JWT token)
+            // ✅ No Authorization header needed
         });
 
         const data = await response.json();
@@ -503,30 +486,35 @@ async function sendForumMessage(gameId) {
     sendButton.textContent = 'Envoi...';
     
     try {
+        // ✅ FIXED: Use URLSearchParams instead of FormData for better compatibility
+        const formData = new URLSearchParams();
+        formData.append('content', content);
+
         const response = await fetch(`/games/${gameId}/messages`, {
             method: 'POST',
+            credentials: 'include', // ✅ Uses cookies (JWT token)
             headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
+                'Content-Type': 'application/x-www-form-urlencoded', // ✅ Explicit content type
             },
-            body: JSON.stringify({ content })
+            body: formData // ✅ URLSearchParams instead of FormData
         });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+        }
 
         const data = await response.json();
         
-        if (!response.ok) {
-            throw new Error(data.detail || "Erreur lors de l'envoi");
-        }
-
         // Vider le champ de saisie
         messageInput.value = '';
         
         // Le message sera affiché automatiquement via WebSocket
-        console.log('✅ Message envoyé avec succès');
+        console.log('✅ Message envoyé avec succès:', data);
 
     } catch (error) {
+        console.error('❌ Erreur envoi message:', error);
         alert(`ERREUR: ${error.message}`);
-        console.error("Erreur complète:", error);
     } finally {
         // Réactiver le bouton
         sendButton.disabled = false;
