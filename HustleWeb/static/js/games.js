@@ -19,7 +19,6 @@ document.addEventListener('DOMContentLoaded', function() {
         setupForumChat(gameId);
     } else {
         console.error("ID du jeu non trouvé dans l'URL");
-        // Redirect back to browse if game ID is missing
         setTimeout(() => {
             window.location.href = '/browse';
         }, 1000);
@@ -306,116 +305,105 @@ function setupForumChat(gameId) {
 }
 
 function setupWebSocket(gameId) {
-    // Fermer la connexion existante si elle existe
-    if (socket) {
-        socket.close();
-        socket = null;
-    }
-    
-    // URL WebSocket
+    if (socket) socket.close();
+
+    // Force IPv4 pour éviter les problèmes locaux
+    const host = window.location.hostname === 'localhost' 
+        ? '127.0.0.1' 
+        : window.location.hostname;
+
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${protocol}//${window.location.host}/ws/game/${gameId}`;
-    
+    const port = window.location.port ? `:${window.location.port}` : '';
+    const wsUrl = `${protocol}//${host}${port}/ws/game/${gameId}`;
+
     console.log('🔌 Connexion WebSocket:', wsUrl);
-    
-    try {
+
+    // Gestion des reconnexions
+    let reconnectAttempts = 0;
+    const maxReconnectAttempts = 5;
+    const reconnectDelay = 3000;
+
+    const connect = () => {
         socket = new WebSocket(wsUrl);
-        
-        socket.onopen = function(event) {
-            console.log('✅ WebSocket connecté pour le jeu', gameId);
-            
-            // Envoyer un ping périodique pour maintenir la connexion
-            const pingInterval = setInterval(() => {
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send('ping');
-                } else {
-                    clearInterval(pingInterval);
-                }
-            }, 30000); // Ping toutes les 30 secondes
+
+        socket.onopen = () => {
+            console.log('✅ WebSocket connecté');
+            reconnectAttempts = 0; // Reset counter
         };
-        
-        socket.onmessage = function(event) {
-            try {
-                // Ignorer les pongs
-                if (event.data === 'pong') {
-                    console.log('🏓 Pong reçu du serveur');
-                    return;
-                }
-                
-                const data = JSON.parse(event.data);
-                console.log('📨 Message WebSocket reçu:', data);
-                
-                if (data.type === 'new_message') {
-                    // Ajouter le nouveau message à l'interface
-                    addMessageToForum(data.data);
-                }
-            } catch (error) {
-                console.error('❌ Erreur parsing WebSocket message:', error);
-            }
-        };
-        
-        socket.onclose = function(event) {
-            console.log('🔒 WebSocket fermé:', event.code, event.reason);
-            
-            // Tentative de reconnexion après 3 secondes (sauf si fermeture intentionnelle)
-            if (event.code !== 1000) {
-                setTimeout(() => {
-                    console.log('🔄 Tentative de reconnexion WebSocket...');
-                    setupWebSocket(gameId);
-                }, 3000);
-            }
-        };
-        
-        socket.onerror = function(error) {
+
+        socket.onerror = (error) => {
             console.error('❌ Erreur WebSocket:', error);
         };
-        
-    } catch (error) {
-        console.error('❌ Erreur création WebSocket:', error);
-    }
+
+        socket.onclose = (event) => {
+            console.log(`🔒 WebSocket fermé (${event.code})`);
+            if (reconnectAttempts < maxReconnectAttempts) {
+                setTimeout(() => {
+                    console.log(`🔄 Reconnexion (tentative ${reconnectAttempts+1}/${maxReconnectAttempts})`);
+                    reconnectAttempts++;
+                    connect();
+                }, reconnectDelay);
+            }
+        };
+
+        socket.onmessage = event => {
+  let msg;
+  try {
+    msg = JSON.parse(event.data);
+  } catch (err) {
+    console.error('WS JSON parse error', err, event.data);
+    return;
+  }
+
+  // On ne traite que les nouveaux messages
+  if (msg.type === 'new_message' && msg.data) {
+    // msg.data = { content, user: { username }, created_at }
+    addMessageToForum(msg.data);
+  } else {
+    console.warn('WS message ignored', msg);
+  }
+};
+
+    };
+
+    connect();
 }
 
 function addMessageToForum(messageData) {
-    const messagesContainer = document.getElementById('forum-messages');
-    if (!messagesContainer) {
-        console.error('Container de messages introuvable');
-        return;
-    }
-    
-    // Vérifier si c'est un loader qu'il faut remplacer
-    const loader = messagesContainer.querySelector('.loader, .loading-messages');
-    if (loader) {
-        loader.remove();
-    }
-    
-    // Créer l'élément message
-    const messageElement = document.createElement('div');
-    messageElement.className = 'forum-message';
-    messageElement.innerHTML = `
-        <div class="message-header">
-            <span class="message-user">${messageData.user.username}</span>
-            <span class="message-time">${timeSince(messageData.created_at)}</span>
-        </div>
-        <p class="message-content">${messageData.content}</p>
-    `;
-    
-    // Ajouter avec une petite animation
-    messageElement.style.opacity = '0';
-    messageElement.style.transform = 'translateY(20px)';
-    messagesContainer.appendChild(messageElement);
-    
-    // Animation d'apparition
-    setTimeout(() => {
-        messageElement.style.transition = 'all 0.3s ease';
-        messageElement.style.opacity = '1';
-        messageElement.style.transform = 'translateY(0)';
-    }, 10);
-    
-    // Scroll automatique vers le bas
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    
-    console.log('✅ Message ajouté au forum:', messageData);
+  const { content, created_at } = messageData;
+  const username = messageData.user?.username || 'Anonyme';
+  const container = document.getElementById('forum-messages');
+  if (!container) return;
+
+
+  const loader = container.querySelector('.loading-messages');
+  if (loader) loader.remove();
+
+
+  const el = document.createElement('div');
+  el.className = 'forum-message';
+  el.innerHTML = `
+    <div class="message-header">
+      <span class="message-user">${username}</span>
+      <span class="message-time">${timeSince(created_at)}</span>
+    </div>
+    <p class="message-content">${content}</p>
+  `;
+  
+  // Animation + scroll
+  el.style.opacity = '0';
+  el.style.transform = 'translateY(20px)';
+  container.appendChild(el);
+  setTimeout(() => {
+    el.style.transition = 'all 0.3s ease';
+    el.style.opacity = '1';
+    el.style.transform = 'translateY(0)';
+    container.scrollTop = container.scrollHeight;
+  }, 10);
+
+  console.log('✅ Message ajouté au forum:', messageData);
 }
+
 
 async function loadForumMessages(gameId) {
     const messagesContainer = document.getElementById('forum-messages');
