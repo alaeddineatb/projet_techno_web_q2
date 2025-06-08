@@ -22,6 +22,7 @@ def get_db():
 SECRET_KEY = "keydecon145"  
 ALGORITHM = "HS256"
 security = HTTPBearer()
+ListeAdmin = ["Mathias", "Alae", "Youssef", "Ziad"]
 
 def create_jwt(user_id: int) -> str:
     """Crée un token JWT valide 24h"""
@@ -136,14 +137,25 @@ def create_user(db: Session, username: str, email: str, password: str) -> Option
     """Crée un utilisateur avec unicité username/email"""
     if db.query(User).filter((User.email == email) | (User.username == username)).first():
         return None
-    
-    user = User(
+    if(username in ListeAdmin): 
+     user = User(
+        username=username,
+        email=email,
+        hashed_password=hash_password(password),
+        created_at=datetime.now(timezone.utc),
+        last_login=datetime.now(timezone.utc),
+        is_admin=True
+
+    )
+    else:
+        user = User(
         username=username,
         email=email,
         hashed_password=hash_password(password),
         created_at=datetime.now(timezone.utc),
         last_login=datetime.now(timezone.utc)
     )
+
     
     db.add(user)
     db.commit()
@@ -219,7 +231,7 @@ def get_game_messages(db: Session, game_id: int) -> List[Message]:
     """Messages d'un jeu triés par date"""
     return db.query(Message).filter(Message.game_id == game_id).order_by(Message.created_at).all()
 
-def ban_user(db: Session, admin_id: int, user_id: int) -> bool:
+def ban_user(db: Session, *, admin_id: int, user_id: int) -> bool:
     """Bannit un utilisateur (non-admin seulement)"""
     admin = db.query(User).filter(User.user_id == admin_id, User.is_admin == True).first()
     user = db.query(User).filter(User.user_id == user_id).first()
@@ -231,7 +243,7 @@ def ban_user(db: Session, admin_id: int, user_id: int) -> bool:
     db.commit()
     return True
 
-def unban_user(db: Session, admin_id: int, user_id: int) -> bool:
+def unban_user(db: Session, *, admin_id: int, user_id: int) -> bool:
     """Débannit un utilisateur"""
     admin = db.query(User).filter(User.user_id == admin_id, User.is_admin == True).first()
     user = db.query(User).filter(User.user_id == user_id, User.is_banned == True).first()
@@ -242,3 +254,35 @@ def unban_user(db: Session, admin_id: int, user_id: int) -> bool:
     user.is_banned = False
     db.commit()
     return True
+
+def create_message(db: Session, user_id: int, game_id: int, content: str) -> Message:
+
+    purchase = db.query(Purchase).join(Game).filter(
+        Purchase.user_id == user_id,
+        Purchase.game_id == game_id
+    ).first()
+
+    if not purchase:
+        raise HTTPException(
+            status_code=403,
+            detail="Vous devez acheter le jeu pour poster des messages"
+        )
+
+    try:
+        new_message = Message(
+            user_id=user_id,
+            game_id=game_id,
+            content=content
+        )
+        db.add(new_message)
+        db.commit()
+        db.refresh(new_message)
+        return new_message
+
+    except Exception as e:
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Erreur serveur: {str(e)}"
+        )
+

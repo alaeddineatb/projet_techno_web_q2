@@ -1,7 +1,4 @@
-"""
-Middleware de sécurité et validation pour Game Store
-Gère la validation des entrées, l'authentification et les autorisations
-"""
+
 from fastapi import HTTPException, Depends, Cookie
 from sqlalchemy.orm import Session
 from typing import Callable

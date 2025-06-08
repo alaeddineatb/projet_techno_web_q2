@@ -85,10 +85,11 @@ async function loginUser(event) {
         });
         
         if (response.ok) {
-            // IMPORTANT: Set auth state BEFORE redirecting
+            const data = await response.json();
             localStorage.setItem('isLoggedIn', 'true');
             localStorage.setItem('username', username);
             localStorage.setItem('loginTimestamp', Date.now().toString());
+            localStorage.setItem('isAdmin', data.isAdmin); 
             
             console.log('Login successful, updating navigation');
             
@@ -158,12 +159,13 @@ async function handleLogout(event) {
     if (event) event.preventDefault();
     
     try {
-        // Clear client-side auth state first
+
+        localStorage.removeItem('isAdmin'); 
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
         localStorage.removeItem('loginTimestamp');
         
-        // Make logout request to server
+
         await fetch('/logout', {
             method: 'POST',
             credentials: 'include'
@@ -171,22 +173,22 @@ async function handleLogout(event) {
         
         console.log('Logout successful');
         
-        // Force navigation update before redirect
+
         updateNavigation(false);
         
-        // Use small delay to ensure state is updated
+
         setTimeout(() => {
             window.location.href = '/';
         }, 50);
     } catch (error) {
         console.error('Logout error:', error);
-        // Still redirect even on error
+
         localStorage.removeItem('isLoggedIn');
         window.location.href = '/';
     }
 }
 
-// Update navigation based on authentication state
+
 function updateNavigation(isAuthenticated) {
     const navLinks = document.getElementById('nav-links');
     if (!navLinks) return;
@@ -194,21 +196,30 @@ function updateNavigation(isAuthenticated) {
     console.log('Updating navigation. Auth state:', isAuthenticated);
     
     if (isAuthenticated) {
-        // User is logged in - show profile and logout options
-        navLinks.innerHTML = `
+
+        const isAdmin = localStorage.getItem('isAdmin') === 'true';
+        
+
+        let linksHTML = `
             <a href="/">Home</a>
             <a href="/browse">Browse Games</a>
             <a href="/profile">My Profile</a>
-            <a href="#" id="logout-link">Logout</a>
         `;
         
-        // Add event listener to logout link
-        const logoutLink = document.getElementById('logout-link');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', handleLogout);
+
+        if (isAdmin) {
+            linksHTML += `<a href="/admin">Admin</a>`;
         }
+        
+
+        linksHTML += `<a href="#" id="logout-link">Logout</a>`;
+        
+        navLinks.innerHTML = linksHTML;
+        
+
+        document.getElementById('logout-link').addEventListener('click', handleLogout);
     } else {
-        // User is not logged in - show login and signup options
+
         navLinks.innerHTML = `
             <a href="/">Home</a>
             <a href="/browse">Browse Games</a>

@@ -2,7 +2,7 @@ from fastapi import Request, APIRouter,HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse,JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi import Depends
-from backend import get_db, get_all_games, get_game_by_id, get_game_messages, get_current_user
+from backend import get_db, get_all_games, get_game_by_id, get_game_messages, get_current_user,verify_admin
 from models import Game,User,Message,Purchase,Rating
 import pathlib
 import json
@@ -241,3 +241,24 @@ async def get_all_ratings(db: Session = Depends(get_db)):
             status_code=500,
             detail=f"Erreur serveur: {str(e)}"
         )
+    
+
+@router.get("/admin")
+async def admin_page(request: Request, admin: User = Depends(verify_admin)):
+    return templates.TemplateResponse("admin.html", {"request": request})
+
+@router.get("/admin/users")
+async def get_users_admin(
+    db: Session = Depends(get_db),
+    admin: User = Depends(verify_admin)
+):
+    users = db.query(User).all()
+    return [
+        {
+            "user_id": u.user_id,
+            "username": u.username,
+            "email": u.email,
+            "is_banned": u.is_banned
+        } 
+        for u in users
+    ]    
