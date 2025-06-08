@@ -8,7 +8,6 @@ document.addEventListener('DOMContentLoaded', function() {
         checkAuth();
     }
     
-    // Extract game ID from URL
     const gameId = window.location.pathname.split('/game/')[1];
     console.log("GameId:", gameId);
     
@@ -24,22 +23,18 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
     }
 
-    // Set up event listeners
     document.getElementById('purchase-btn').addEventListener('click', () => handlePurchaseClick(gameId));
     document.getElementById('submit-rating').addEventListener('click', () => submitRating(gameId));
     
-    // Set up payment form
     const paymentForm = document.getElementById('payment-form');
     if (paymentForm) {
         paymentForm.addEventListener('submit', (e) => processPayment(e, gameId));
     }
     
-    // Card input formatting
     setupCardInputFormatting();
 });
 
 function loadGameDetails(gameId) {
-    // Convert to integer for comparison if needed
     const gameIdInt = parseInt(gameId);
     currentGame = window.allGames.find(g => g.game_id === gameIdInt || g.game_id === gameId);
     console.log("Jeu trouvé:", currentGame);
@@ -51,7 +46,6 @@ function loadGameDetails(gameId) {
         return;
     }
 
-    // Update the interface
     document.getElementById('game-title').textContent = currentGame.title;
     document.getElementById('game-publisher').textContent = currentGame.publisher;
     document.getElementById('game-category').textContent = currentGame.category;
@@ -59,12 +53,10 @@ function loadGameDetails(gameId) {
     document.getElementById('game-rating').textContent = currentGame.rating_avg;
     document.getElementById('game-description').textContent = currentGame.description;
 
-    // Update image if available
     if (currentGame.image) {
         document.getElementById('game-img').src = currentGame.image;
     }
     
-    // Update page title
     document.title = `${currentGame.title} - Détails du Jeu - HustleWeb`;
 }
 
@@ -90,13 +82,11 @@ function setupRatingStars() {
 }
 
 function handlePurchaseClick(gameId) {
-    // Check if user is logged in first
     if (!isUserAuthenticated()) {
         showModal('login-required-modal');
         return;
     }
     
-    // User is authenticated, show payment modal
     if (currentGame) {
         document.getElementById('purchase-game-title').textContent = currentGame.title;
         document.getElementById('purchase-price').textContent = `Prix: ${currentGame.price} €`;
@@ -106,14 +96,12 @@ function handlePurchaseClick(gameId) {
 }
 
 function setupModalHandlers() {
-    // Close buttons for all modals
     document.querySelectorAll('.close-button, .close-modal').forEach(button => {
         button.addEventListener('click', function() {
             hideAllModals();
         });
     });
     
-    // Outside click to close modals
     window.addEventListener('click', function(event) {
         document.querySelectorAll('.modal').forEach(modal => {
             if (event.target === modal) {
@@ -122,7 +110,6 @@ function setupModalHandlers() {
         });
     });
     
-    // Login redirect button
     document.getElementById('go-to-login').addEventListener('click', function() {
         window.location.href = '/login';
     });
@@ -133,7 +120,7 @@ function showModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
         modal.classList.add('active');
-        document.body.style.overflow = 'hidden'; // Prevent scrolling
+        document.body.style.overflow = 'hidden';
     }
 }
 
@@ -141,7 +128,7 @@ function hideAllModals() {
     document.querySelectorAll('.modal').forEach(modal => {
         modal.classList.remove('active');
     });
-    document.body.style.overflow = 'auto'; // Re-enable scrolling
+    document.body.style.overflow = 'auto';
 }
 
 async function submitRating(gameId) {
@@ -192,11 +179,9 @@ async function processPayment(event, gameId) {
     confirmButton.textContent = 'Traitement...';
 
     try {
-        // ✅ FIXED: Use credentials instead of Authorization header
         const response = await fetch(`/purchase/${gameId}`, {
             method: 'POST',
-            credentials: 'include' // ✅ Uses cookies (JWT token)
-            // ✅ No Authorization header needed
+            credentials: 'include'
         });
 
         const data = await response.json();
@@ -223,26 +208,18 @@ async function processPayment(event, gameId) {
     }
 }
 
-// Helper function to check if user is authenticated
 function isUserAuthenticated() {
-    // Check local storage and cookies
     return localStorage.getItem('isLoggedIn') === 'true' || 
            localStorage.getItem('token') || 
            document.cookie.includes('token=');
 }
 
-// Set up card number formatting
 function setupCardInputFormatting() {
     const cardNumberInput = document.getElementById('card-number');
     if (cardNumberInput) {
         cardNumberInput.addEventListener('input', function(e) {
-            // Remove non-digits
             let input = this.value.replace(/\D/g, '');
-            
-            // Add space after every 4 digits
             input = input.replace(/(\d{4})(?=\d)/g, '$1 ');
-            
-            // Update input value
             this.value = input;
         });
     }
@@ -250,15 +227,10 @@ function setupCardInputFormatting() {
     const expiryInput = document.getElementById('card-expiry');
     if (expiryInput) {
         expiryInput.addEventListener('input', function(e) {
-            // Remove non-digits
             let input = this.value.replace(/\D/g, '');
-            
-            // Add slash after month
             if (input.length > 2) {
                 input = input.substring(0, 2) + '/' + input.substring(2, 4);
             }
-            
-            // Update input value
             this.value = input;
         });
     }
@@ -266,13 +238,10 @@ function setupCardInputFormatting() {
     const cvvInput = document.getElementById('card-cvv');
     if (cvvInput) {
         cvvInput.addEventListener('input', function(e) {
-            // Allow only digits
             this.value = this.value.replace(/\D/g, '');
         });
     }
 }
-
-// ========== WEBSOCKET ET FORUM ==========
 
 function setupForumChat(gameId) {
     const isLoggedIn = isUserAuthenticated();
@@ -280,7 +249,6 @@ function setupForumChat(gameId) {
     const messageInput = document.getElementById('message-input');
     const loginNotice = document.querySelector('.login-required-notice');
     
-    // Configuration pour les utilisateurs connectés
     if (!isLoggedIn) {
         sendButton.disabled = true;
         messageInput.disabled = true;
@@ -297,17 +265,13 @@ function setupForumChat(gameId) {
         });
     }
     
-    // Charger les messages existants
     loadForumMessages(gameId);
-    
-    // Configurer WebSocket pour TOUS les utilisateurs (connectés ou non)
     setupWebSocket(gameId);
 }
 
 function setupWebSocket(gameId) {
     if (socket) socket.close();
 
-    // Force IPv4 pour éviter les problèmes locaux
     const host = window.location.hostname === 'localhost' 
         ? '127.0.0.1' 
         : window.location.hostname;
@@ -318,7 +282,6 @@ function setupWebSocket(gameId) {
 
     console.log('🔌 Connexion WebSocket:', wsUrl);
 
-    // Gestion des reconnexions
     let reconnectAttempts = 0;
     const maxReconnectAttempts = 5;
     const reconnectDelay = 3000;
@@ -328,7 +291,7 @@ function setupWebSocket(gameId) {
 
         socket.onopen = () => {
             console.log('✅ WebSocket connecté');
-            reconnectAttempts = 0; // Reset counter
+            reconnectAttempts = 0;
         };
 
         socket.onerror = (error) => {
@@ -347,90 +310,104 @@ function setupWebSocket(gameId) {
         };
 
         socket.onmessage = event => {
-  let msg;
-  try {
-    msg = JSON.parse(event.data);
-  } catch (err) {
-    console.error('WS JSON parse error', err, event.data);
-    return;
-  }
+            let msg;
+            try {
+                msg = JSON.parse(event.data);
+            } catch (err) {
+                console.error('WS JSON parse error', err, event.data);
+                return;
+            }
 
-  // On ne traite que les nouveaux messages
-  if (msg.type === 'new_message' && msg.data) {
-    // msg.data = { content, user: { username }, created_at }
-    addMessageToForum(msg.data);
-  } else {
-    console.warn('WS message ignored', msg);
-  }
-};
-
+            if (msg.type === 'new_message' && msg.data) {
+                addMessageToForum(msg.data);
+            } else {
+                console.warn('WS message ignored', msg);
+            }
+        };
     };
 
     connect();
 }
 
 function addMessageToForum(messageData) {
-  const { content, created_at } = messageData;
-  const username = messageData.user?.username || 'Anonyme';
-  const container = document.getElementById('forum-messages');
-  if (!container) return;
+    const { content, created_at } = messageData;
+    const username = messageData.user?.username || 'Anonyme';
+    const container = document.getElementById('forum-messages');
+    if (!container) return;
 
+    const loader = container.querySelector('.loading-messages');
+    if (loader) loader.remove();
 
-  const loader = container.querySelector('.loading-messages');
-  if (loader) loader.remove();
+    const messageEl = document.createElement('div');
+    messageEl.className = 'forum-message';
+    
+    const messageHeader = document.createElement('div');
+    messageHeader.className = 'message-header';
+    
+    const messageUser = document.createElement('span');
+    messageUser.className = 'message-user';
+    messageUser.textContent = username;
+    
+    const messageTime = document.createElement('span');
+    messageTime.className = 'message-time';
+    messageTime.textContent = timeSince(created_at);
+    
+    const messageContent = document.createElement('p');
+    messageContent.className = 'message-content';
+    messageContent.textContent = content;
+    
+    messageHeader.appendChild(messageUser);
+    messageHeader.appendChild(messageTime);
+    messageEl.appendChild(messageHeader);
+    messageEl.appendChild(messageContent);
+    
+    messageEl.style.opacity = '0';
+    messageEl.style.transform = 'translateY(20px)';
+    container.appendChild(messageEl);
+    
+    setTimeout(() => {
+        messageEl.style.transition = 'all 0.3s ease';
+        messageEl.style.opacity = '1';
+        messageEl.style.transform = 'translateY(0)';
+        container.scrollTop = container.scrollHeight;
+    }, 10);
 
-
-  const el = document.createElement('div');
-  el.className = 'forum-message';
-  el.innerHTML = `
-    <div class="message-header">
-      <span class="message-user">${username}</span>
-      <span class="message-time">${timeSince(created_at)}</span>
-    </div>
-    <p class="message-content">${content}</p>
-  `;
-  
-  // Animation + scroll
-  el.style.opacity = '0';
-  el.style.transform = 'translateY(20px)';
-  container.appendChild(el);
-  setTimeout(() => {
-    el.style.transition = 'all 0.3s ease';
-    el.style.opacity = '1';
-    el.style.transform = 'translateY(0)';
-    container.scrollTop = container.scrollHeight;
-  }, 10);
-
-  console.log('✅ Message ajouté au forum:', messageData);
+    console.log('✅ Message ajouté au forum:', messageData);
 }
-
 
 async function loadForumMessages(gameId) {
     const messagesContainer = document.getElementById('forum-messages');
     if (!messagesContainer) return;
 
     try {
-        // Afficher un loader
-        messagesContainer.innerHTML = '<div class="loading-messages"><p>Chargement des messages...</p></div>';
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'loading-messages';
+        const loadingText = document.createElement('p');
+        loadingText.textContent = 'Chargement des messages...';
+        loadingDiv.appendChild(loadingText);
+        
+        messagesContainer.replaceChildren();
+        messagesContainer.appendChild(loadingDiv);
 
-        // Appel API
         const response = await fetch(`/games/${gameId}/messages`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
         
         const messages = await response.json();
 
-        // Vider le conteneur
-        messagesContainer.innerHTML = '';
+        messagesContainer.replaceChildren();
 
-        // Ajouter chaque message
         if (messages.length === 0) {
-            messagesContainer.innerHTML = '<div class="no-messages"><p>Aucun message pour le moment. Soyez le premier à commenter !</p></div>';
+            const noMessages = document.createElement('div');
+            noMessages.className = 'no-messages';
+            const noMessagesText = document.createElement('p');
+            noMessagesText.textContent = 'Aucun message pour le moment. Soyez le premier à commenter !';
+            noMessages.appendChild(noMessagesText);
+            messagesContainer.appendChild(noMessages);
         } else {
-            // Trier les messages par date croissante (du plus ancien au plus récent)
             const sortedMessages = messages.sort((a, b) => {
                 const dateA = new Date(a.created_at);
                 const dateB = new Date(b.created_at);
-                return dateA - dateB; // Tri croissant
+                return dateA - dateB;
             });
 
             console.log('📝 Messages triés par date:', sortedMessages.map(m => m.created_at));
@@ -438,23 +415,40 @@ async function loadForumMessages(gameId) {
             sortedMessages.forEach(msg => {
                 const messageElement = document.createElement('div');
                 messageElement.className = 'forum-message';
-                messageElement.innerHTML = `
-                    <div class="message-header">
-                        <span class="message-user">${msg.user.username}</span>
-                        <span class="message-time">${timeSince(msg.created_at)}</span>
-                    </div>
-                    <p class="message-content">${msg.content}</p>
-                `;
+                
+                const messageHeader = document.createElement('div');
+                messageHeader.className = 'message-header';
+                
+                const messageUser = document.createElement('span');
+                messageUser.className = 'message-user';
+                messageUser.textContent = msg.user.username;
+                
+                const messageTime = document.createElement('span');
+                messageTime.className = 'message-time';
+                messageTime.textContent = timeSince(msg.created_at);
+                
+                const messageContent = document.createElement('p');
+                messageContent.className = 'message-content';
+                messageContent.textContent = msg.content;
+                
+                messageHeader.appendChild(messageUser);
+                messageHeader.appendChild(messageTime);
+                messageElement.appendChild(messageHeader);
+                messageElement.appendChild(messageContent);
+                
                 messagesContainer.appendChild(messageElement);
             });
         }
 
-        // Scroll automatique vers le bas
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     } catch (error) {
         console.error('Erreur chargement messages:', error);
-        messagesContainer.innerHTML = '<div class="error">Erreur de chargement des messages</div>';
+        messagesContainer.replaceChildren();
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = 'Erreur de chargement des messages';
+        messagesContainer.appendChild(errorDiv);
     }
 }
 
@@ -467,24 +461,22 @@ async function sendForumMessage(gameId) {
         return;
     }
     
-    // Désactiver temporairement le bouton pour éviter les doubles envois
     const sendButton = document.getElementById('send-message');
     const originalText = sendButton.textContent;
     sendButton.disabled = true;
     sendButton.textContent = 'Envoi...';
     
     try {
-        // ✅ FIXED: Use URLSearchParams instead of FormData for better compatibility
         const formData = new URLSearchParams();
         formData.append('content', content);
 
         const response = await fetch(`/games/${gameId}/messages`, {
             method: 'POST',
-            credentials: 'include', // ✅ Uses cookies (JWT token)
+            credentials: 'include',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded', // ✅ Explicit content type
+                'Content-Type': 'application/x-www-form-urlencoded',
             },
-            body: formData // ✅ URLSearchParams instead of FormData
+            body: formData
         });
 
         if (!response.ok) {
@@ -494,34 +486,28 @@ async function sendForumMessage(gameId) {
 
         const data = await response.json();
         
-        // Vider le champ de saisie
         messageInput.value = '';
         
-        // Le message sera affiché automatiquement via WebSocket
         console.log('✅ Message envoyé avec succès:', data);
 
     } catch (error) {
         console.error('❌ Erreur envoi message:', error);
         alert(`ERREUR: ${error.message}`);
     } finally {
-        // Réactiver le bouton
         sendButton.disabled = false;
         sendButton.textContent = originalText;
     }
 }
 
 function timeSince(dateString) {
-    // 1. Forcer le format UTC si absent
     const isoDateString = dateString.endsWith('Z') ? dateString : `${dateString}Z`;
     const date = new Date(isoDateString);
     
-    // 2. Validation de la date
     if (isNaN(date)) {
         console.error(`Date invalide : ${dateString}`);
         return 'date inconnue';
     }
 
-    // 3. Calcul en UTC pour éviter les décalages
     const nowUTC = Date.UTC(
         new Date().getUTCFullYear(),
         new Date().getUTCMonth(),
@@ -570,14 +556,12 @@ function timeSince(dateString) {
     return `il y a ${largestValue} ${largestUnit}${plural}`;
 }
 
-// Nettoyer WebSocket quand on quitte la page
 window.addEventListener('beforeunload', function() {
     if (socket) {
-        socket.close(1000, 'Page fermée'); // Code 1000 = fermeture normale
+        socket.close(1000, 'Page fermée');
     }
 });
 
-// Optionnel: Fonction pour reconnecter manuellement
 function reconnectWebSocket(gameId) {
     console.log('🔄 Reconnexion manuelle WebSocket...');
     setupWebSocket(gameId);

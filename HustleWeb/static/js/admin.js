@@ -1,10 +1,8 @@
-// Fonctions d'authentification et navigation
 document.addEventListener('DOMContentLoaded', function() {
     checkAuth();
     setupAdminPage();
     setupPageHandlers();
     
-    // Debug
     console.log('Admin page loaded');
 });
 
@@ -24,27 +22,62 @@ function updateNavigation(isAuthenticated) {
     const navLinks = document.getElementById('nav-links');
     if (!navLinks) return;
     
+    navLinks.replaceChildren();
+    
     if (isAuthenticated) {
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
-        navLinks.innerHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/profile">My Profile</a>
-            ${isAdmin ? '<a href="/admin.html">Admin</a>' : ''}
-            <a href="#" id="logout-link">Logout</a>
-        `;
         
-        const logoutLink = document.getElementById('logout-link');
-        if (logoutLink) {
-            logoutLink.addEventListener('click', handleLogout);
+        const homeLink = document.createElement('a');
+        homeLink.href = '/';
+        homeLink.textContent = 'Home';
+        
+        const browseLink = document.createElement('a');
+        browseLink.href = '/browse';
+        browseLink.textContent = 'Browse Games';
+        
+        const profileLink = document.createElement('a');
+        profileLink.href = '/profile';
+        profileLink.textContent = 'My Profile';
+        
+        navLinks.appendChild(homeLink);
+        navLinks.appendChild(browseLink);
+        navLinks.appendChild(profileLink);
+        
+        if (isAdmin) {
+            const adminLink = document.createElement('a');
+            adminLink.href = '/admin.html';
+            adminLink.textContent = 'Admin';
+            navLinks.appendChild(adminLink);
         }
+        
+        const logoutLink = document.createElement('a');
+        logoutLink.href = '#';
+        logoutLink.id = 'logout-link';
+        logoutLink.textContent = 'Logout';
+        logoutLink.addEventListener('click', handleLogout);
+        navLinks.appendChild(logoutLink);
+        
     } else {
-        navLinks.innerHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/login">Login</a>
-            <a href="/signup">Sign Up</a>
-        `;
+        const homeLink = document.createElement('a');
+        homeLink.href = '/';
+        homeLink.textContent = 'Home';
+        
+        const browseLink = document.createElement('a');
+        browseLink.href = '/browse';
+        browseLink.textContent = 'Browse Games';
+        
+        const loginLink = document.createElement('a');
+        loginLink.href = '/login';
+        loginLink.textContent = 'Login';
+        
+        const signupLink = document.createElement('a');
+        signupLink.href = '/signup';
+        signupLink.textContent = 'Sign Up';
+        
+        navLinks.appendChild(homeLink);
+        navLinks.appendChild(browseLink);
+        navLinks.appendChild(loginLink);
+        navLinks.appendChild(signupLink);
     }
 }
 
@@ -74,12 +107,10 @@ async function handleLogout(event) {
 }
 
 function setupPageHandlers() {
-    // Login form handler
     if (document.getElementById('login-form')) {
         document.getElementById('login-form').addEventListener('submit', loginUser);
     }
     
-    // Signup form handler
     const signupForm = document.getElementById('signup-form');
     if (signupForm && !signupForm.hasAttribute('data-handler-attached')) {
         signupForm.setAttribute('data-handler-attached', 'true');
@@ -87,9 +118,7 @@ function setupPageHandlers() {
     }
 }
 
-// Fonctions spécifiques à la page admin
 function setupAdminPage() {
-    // Tab Switching
     document.querySelectorAll('.tab-button').forEach(button => {
         button.addEventListener('click', () => {
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
@@ -99,55 +128,55 @@ function setupAdminPage() {
             const tabId = button.getAttribute('data-tab');
             document.getElementById(tabId).classList.add('active');
             
-            // Charger les utilisateurs si l'onglet est activé
             if (tabId === 'manage-users') {
                 loadUsers();
             }
         });
     });
     
-    // Game form
-    document.getElementById('game-form').addEventListener('submit', async (e) => {
-        e.preventDefault();
-        
-        const formData = {
-            title: document.getElementById('title').value,
-            description: document.getElementById('description').value,
-            price: parseFloat(document.getElementById('price').value),
-            publisher: document.getElementById('publisher').value,
-            category: document.getElementById('category').value,
-            platforms: document.getElementById('platforms').value,
-            image_url: document.getElementById('image_url').value
-        };
-        
-        try {
-            const response = await fetch('/games/add', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify(formData)
-            });
+    const gameForm = document.getElementById('game-form');
+    if (gameForm) {
+        gameForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
             
-            if (response.ok) {
-                alert('Jeu ajouté avec succès!');
-                document.getElementById('game-form').reset();
-            } else {
-                const error = await response.text();
-                alert(`Erreur: ${error}`);
+            const formData = {
+                title: document.getElementById('title').value,
+                description: document.getElementById('description').value,
+                price: parseFloat(document.getElementById('price').value),
+                publisher: document.getElementById('publisher').value,
+                category: document.getElementById('category').value,
+                platforms: document.getElementById('platforms').value,
+                image_url: document.getElementById('image_url').value
+            };
+            
+            try {
+                const response = await fetch('/games/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                if (response.ok) {
+                    alert('Jeu ajouté avec succès!');
+                    document.getElementById('game-form').reset();
+                } else {
+                    const error = await response.text();
+                    alert(`Erreur: ${error}`);
+                }
+            } catch (err) {
+                alert('Erreur réseau: ' + err.message);
             }
-        } catch (err) {
-            alert('Erreur réseau: ' + err.message);
-        }
-    });
+        });
+    }
     
-    // Initialiser les utilisateurs si sur le bon onglet
-    if (document.getElementById('manage-users').classList.contains('active')) {
+    const manageUsersTab = document.getElementById('manage-users');
+    if (manageUsersTab && manageUsersTab.classList.contains('active')) {
         loadUsers();
     }
 }
 
-// Load Users
 async function loadUsers() {
     try {
         const response = await fetch('/admin/users');
@@ -161,10 +190,11 @@ async function loadUsers() {
     }
 }
 
-// Render Users
 function renderUsers(users) {
     const tbody = document.getElementById('users-list-body');
-    tbody.innerHTML = '';
+    if (!tbody) return;
+    
+    tbody.replaceChildren();
     
     users.forEach(user => {
         const tr = document.createElement('tr');
@@ -210,7 +240,6 @@ function renderUsers(users) {
     });
 }
 
-
 async function banUser(userId) {
     if (!confirm('Êtes-vous sûr de vouloir bannir cet utilisateur ?')) return;
     
@@ -229,7 +258,6 @@ async function banUser(userId) {
         alert('Erreur réseau: ' + err.message);
     }
 }
-
 
 async function unbanUser(userId) {
     if (!confirm('Êtes-vous sûr de vouloir débannir cet utilisateur ?')) return;

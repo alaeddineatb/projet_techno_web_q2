@@ -1,18 +1,13 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Force immediate authentication check on page load
     checkAuth();
-    
-    // Set up page-specific event listeners
     setupPageHandlers();
     
-    // Debug: Log current auth state
     console.log('Auth state on page load:', {
         'Cookies': document.cookie,
         'LocalStorage isLoggedIn': localStorage.getItem('isLoggedIn'),
         'Current page': window.location.pathname
     });
     
-    // Important: If we just arrived at /browse from login, ensure nav is updated
     if (window.location.pathname === '/browse' && 
         document.referrer.includes('/login') && 
         localStorage.getItem('isLoggedIn') === 'true') {
@@ -21,14 +16,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Set up event handlers based on current page
 function setupPageHandlers() {
-    // Login form handler
     if (document.getElementById('login-form')) {
         document.getElementById('login-form').addEventListener('submit', loginUser);
     }
     
-    // Signup form handler - Only add event listener if not already present
     const signupForm = document.getElementById('signup-form');
     if (signupForm && !signupForm.hasAttribute('data-handler-attached')) {
         signupForm.setAttribute('data-handler-attached', 'true');
@@ -36,24 +28,19 @@ function setupPageHandlers() {
     }
 }
 
-// Check if user is authenticated and update UI accordingly
 function checkAuth() {
     const isAuthenticated = isUserAuthenticated();
     updateNavigation(isAuthenticated);
     return isAuthenticated;
 }
 
-// Determine if user is authenticated
 function isUserAuthenticated() {
-    // Check several possible auth indicators
     const hasCookie = document.cookie.includes('token=');
     const hasLocalStorage = localStorage.getItem('isLoggedIn') === 'true';
     
-    // Return true if any auth method indicates the user is logged in
     return hasCookie || hasLocalStorage;
 }
 
-// Login form submission handler
 async function loginUser(event) {
     event.preventDefault();
     
@@ -70,18 +57,16 @@ async function loginUser(event) {
         formData.append('username', username);
         formData.append('password', password);
         
-        // Show some feedback that the login is processing
         const submitButton = event.target.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.textContent = 'Logging in...';
             submitButton.disabled = true;
         }
         
-        // Make the login request
         const response = await fetch('/login', {
             method: 'POST',
             body: formData,
-            credentials: 'include' // Important for cookies
+            credentials: 'include'
         });
         
         if (response.ok) {
@@ -95,12 +80,10 @@ async function loginUser(event) {
             
             updateNavigation(true);
             
-            // Use a slight delay to ensure state is saved before redirect
             setTimeout(() => {
                 window.location.href = '/browse';
             }, 50);
         } else {
-            // Reset button state
             if (submitButton) {
                 submitButton.textContent = 'Login';
                 submitButton.disabled = false;
@@ -115,7 +98,6 @@ async function loginUser(event) {
     }
 }
 
-// Signup form submission handler
 async function signupUser(event) {
     event.preventDefault();
     
@@ -123,7 +105,6 @@ async function signupUser(event) {
         const form = event.target;
         const formData = new FormData(form);
         
-        // Show feedback during signup process
         const submitButton = form.querySelector('button[type="submit"]');
         if (submitButton) {
             submitButton.textContent = 'Creating Account...';
@@ -139,7 +120,6 @@ async function signupUser(event) {
             alert('Account created! Please log in.');
             window.location.href = '/login';
         } else {
-            // Reset button state
             if (submitButton) {
                 submitButton.textContent = 'Sign Up';
                 submitButton.disabled = false;
@@ -154,18 +134,15 @@ async function signupUser(event) {
     }
 }
 
-// Handle logout action
 async function handleLogout(event) {
     if (event) event.preventDefault();
     
     try {
-
         localStorage.removeItem('isAdmin'); 
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
         localStorage.removeItem('loginTimestamp');
         
-
         await fetch('/logout', {
             method: 'POST',
             credentials: 'include'
@@ -173,21 +150,17 @@ async function handleLogout(event) {
         
         console.log('Logout successful');
         
-
         updateNavigation(false);
         
-
         setTimeout(() => {
             window.location.href = '/';
         }, 50);
     } catch (error) {
         console.error('Logout error:', error);
-
         localStorage.removeItem('isLoggedIn');
         window.location.href = '/';
     }
 }
-
 
 function updateNavigation(isAuthenticated) {
     const navLinks = document.getElementById('nav-links');
@@ -195,36 +168,60 @@ function updateNavigation(isAuthenticated) {
     
     console.log('Updating navigation. Auth state:', isAuthenticated);
     
+    navLinks.replaceChildren();
+    
     if (isAuthenticated) {
-
         const isAdmin = localStorage.getItem('isAdmin') === 'true';
         
-
-        let linksHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/profile">My Profile</a>
-        `;
+        const homeLink = document.createElement('a');
+        homeLink.href = '/';
+        homeLink.textContent = 'Home';
         
-
+        const browseLink = document.createElement('a');
+        browseLink.href = '/browse';
+        browseLink.textContent = 'Browse Games';
+        
+        const profileLink = document.createElement('a');
+        profileLink.href = '/profile';
+        profileLink.textContent = 'My Profile';
+        
+        navLinks.appendChild(homeLink);
+        navLinks.appendChild(browseLink);
+        navLinks.appendChild(profileLink);
+        
         if (isAdmin) {
-            linksHTML += `<a href="/admin">Admin</a>`;
+            const adminLink = document.createElement('a');
+            adminLink.href = '/admin';
+            adminLink.textContent = 'Admin';
+            navLinks.appendChild(adminLink);
         }
         
-
-        linksHTML += `<a href="#" id="logout-link">Logout</a>`;
-        
-        navLinks.innerHTML = linksHTML;
-        
-
-        document.getElementById('logout-link').addEventListener('click', handleLogout);
+        const logoutLink = document.createElement('a');
+        logoutLink.href = '#';
+        logoutLink.id = 'logout-link';
+        logoutLink.textContent = 'Logout';
+        logoutLink.addEventListener('click', handleLogout);
+        navLinks.appendChild(logoutLink);
     } else {
-
-        navLinks.innerHTML = `
-            <a href="/">Home</a>
-            <a href="/browse">Browse Games</a>
-            <a href="/login">Login</a>
-            <a href="/signup">Sign Up</a>
-        `;
+        const homeLink = document.createElement('a');
+        homeLink.href = '/';
+        homeLink.textContent = 'Home';
+        
+        const browseLink = document.createElement('a');
+        browseLink.href = '/browse';
+        browseLink.textContent = 'Browse Games';
+        
+        const loginLink = document.createElement('a');
+        loginLink.href = '/login';
+        loginLink.textContent = 'Login';
+        
+        const signupLink = document.createElement('a');
+        signupLink.href = '/signup';
+        signupLink.textContent = 'Sign Up';
+        
+        navLinks.appendChild(homeLink);
+        navLinks.appendChild(browseLink);
+        navLinks.appendChild(loginLink);
+        navLinks.appendChild(signupLink);
     }
 }

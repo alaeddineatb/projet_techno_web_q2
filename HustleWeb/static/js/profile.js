@@ -1,27 +1,16 @@
 document.addEventListener('DOMContentLoaded', function() {
-    // Check if user is authenticated
     checkProfileAuth();
-    
-    // Setup profile functionality
     displayUserInfo();
     setupPhotoUpload();
-    
-    // Setup tabs
     setupTabs();
-    
-    // Load user data
     loadPurchasedGames();
-
     loadUserMessages();
 });
 
-// Check if user is authenticated for profile page
 function checkProfileAuth() {
-    // Check authentication using both cookies and localStorage
     const isLoggedIn = document.cookie.includes('token=') || 
                        localStorage.getItem('isLoggedIn') === 'true';
     
-    // If not logged in, redirect to login page
     if (!isLoggedIn) {
         console.log('User not authenticated, redirecting to login');
         window.location.href = '/login';
@@ -35,11 +24,9 @@ function displayUserInfo() {
     const usernameElement = document.getElementById('profile-username');
     const profilePicElement = document.getElementById('profile-pic');
     
-    // Get values from data attributes (server-side rendered)
     if (usernameElement && usernameElement.dataset.username) {
         usernameElement.textContent = usernameElement.dataset.username;
     } else {
-        // Fallback to localStorage if available
         const storedUsername = localStorage.getItem('username');
         if (storedUsername) {
             usernameElement.textContent = storedUsername;
@@ -53,7 +40,6 @@ function displayUserInfo() {
         profilePicElement.src = profilePicSrc;
     }
     
- 
     const memberSinceElement = document.getElementById('member-since');
     if (memberSinceElement) {
         memberSinceElement.textContent = 'Juin 2025';
@@ -83,7 +69,6 @@ function setupPhotoUpload() {
                 const newPhotoUrl = data.photo_url + "?t=" + Date.now();
                 document.getElementById('profile-pic').src = newPhotoUrl;
                 
-                // Also store in localStorage as backup
                 localStorage.setItem('profilePic', newPhotoUrl);
             } else {
                 alert('Error updating profile picture: ' + (await response.text()));
@@ -100,14 +85,11 @@ function setupTabs() {
     
     tabButtons.forEach(button => {
         button.addEventListener('click', function() {
-            // Remove active class from all buttons and panes
             document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.tab-pane').forEach(pane => pane.classList.remove('active'));
             
-            // Add active class to clicked button
             this.classList.add('active');
             
-            // Show corresponding pane
             const tabId = this.getAttribute('data-tab');
             document.getElementById(tabId).classList.add('active');
         });
@@ -118,7 +100,12 @@ async function loadPurchasedGames() {
     const purchasedGamesContainer = document.getElementById('purchased-games');
     
     try {
-        purchasedGamesContainer.innerHTML = '<div class="loader">Chargement de vos jeux...</div>';
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+        loader.textContent = 'Chargement de vos jeux...';
+        
+        purchasedGamesContainer.replaceChildren();
+        purchasedGamesContainer.appendChild(loader);
         
         const response = await fetch('/api/user/purchases', {
             headers: {
@@ -130,59 +117,95 @@ async function loadPurchasedGames() {
         
         const purchasedGames = await response.json();
         
-
         const gamesCountElement = document.getElementById('games-count');
         if (gamesCountElement) {
             gamesCountElement.textContent = purchasedGames.length;
         }
         
-        purchasedGamesContainer.innerHTML = '';
+        purchasedGamesContainer.replaceChildren();
         
         if (purchasedGames.length === 0) {
-            purchasedGamesContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>Vous n'avez pas encore acheté de jeux.</p>
-                    <a href="/browse" class="cta-button">Explorer les jeux</a>
-                </div>
-            `;
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            
+            const emptyText = document.createElement('p');
+            emptyText.textContent = "Vous n'avez pas encore acheté de jeux.";
+            
+            const exploreLink = document.createElement('a');
+            exploreLink.href = '/browse';
+            exploreLink.className = 'cta-button';
+            exploreLink.textContent = 'Explorer les jeux';
+            
+            emptyState.appendChild(emptyText);
+            emptyState.appendChild(exploreLink);
+            purchasedGamesContainer.appendChild(emptyState);
             return;
         }
         
-
         purchasedGames.forEach(game => {
             const roundedRating = Math.round(game.rating_avg || 0);
             const stars = '★'.repeat(roundedRating) + '☆'.repeat(5 - roundedRating);
             
             const gameCard = document.createElement('div');
             gameCard.className = 'game-card';
-            gameCard.innerHTML = `
-                <div class="game-cover" style="background-color: ${game.image}"></div>
-                <div class="game-info">
-                    <h4>${game.title}</h4>
-                    <p>${game.category}</p>
-                    <div class="game-rating">${stars}</div>
-                    <div class="purchase-date">Acheté le: ${new Date(game.purchase_date).toLocaleDateString()}</div>
-                </div>
-            `;
+            
+            const gameCover = document.createElement('div');
+            gameCover.className = 'game-cover';
+            gameCover.style.backgroundColor = game.image;
+            
+            const gameInfo = document.createElement('div');
+            gameInfo.className = 'game-info';
+            
+            const gameTitle = document.createElement('h4');
+            gameTitle.textContent = game.title;
+            
+            const gameCategory = document.createElement('p');
+            gameCategory.textContent = game.category;
+            
+            const gameRating = document.createElement('div');
+            gameRating.className = 'game-rating';
+            gameRating.textContent = stars;
+            
+            const purchaseDate = document.createElement('div');
+            purchaseDate.className = 'purchase-date';
+            purchaseDate.textContent = `Acheté le: ${new Date(game.purchase_date).toLocaleDateString()}`;
+            
+            gameInfo.appendChild(gameTitle);
+            gameInfo.appendChild(gameCategory);
+            gameInfo.appendChild(gameRating);
+            gameInfo.appendChild(purchaseDate);
+            
+            gameCard.appendChild(gameCover);
+            gameCard.appendChild(gameInfo);
+            
             gameCard.addEventListener('click', () => {
                 window.location.href = `/game/${game.id}`;
             });
+            
             purchasedGamesContainer.appendChild(gameCard);
         });
         
     } catch (error) {
         console.error('Erreur:', error);
-        purchasedGamesContainer.innerHTML = `
-            <div class="error">Erreur de chargement des jeux achetés</div>
-        `;
+        purchasedGamesContainer.replaceChildren();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = 'Erreur de chargement des jeux achetés';
+        purchasedGamesContainer.appendChild(errorDiv);
     }
 }
 
 async function loadUserMessages() {
-     const messagesContainer = document.getElementById('user-messages');
+    const messagesContainer = document.getElementById('user-messages');
     
     try {
-        messagesContainer.innerHTML = '<div class="loader">Chargement de vos messages...</div>';
+        const loader = document.createElement('div');
+        loader.className = 'loader';
+        loader.textContent = 'Chargement de vos messages...';
+        
+        messagesContainer.replaceChildren();
+        messagesContainer.appendChild(loader);
         
         const response = await fetch('/api/user/messages', {
             headers: {
@@ -194,34 +217,52 @@ async function loadUserMessages() {
         
         const userMessages = await response.json();
         
-        
-        messagesContainer.innerHTML = '';
+        messagesContainer.replaceChildren();
         
         if (userMessages.length === 0) {
-            messagesContainer.innerHTML = `
-                <div class="empty-state">
-                    <p>Vous n'avez pas encore envoyé de messages.</p>
-                    <a href="/browse" class="cta-button">Explorer et parler de vos jeux préfèrés</a>
-                </div>
-            `;
+            const emptyState = document.createElement('div');
+            emptyState.className = 'empty-state';
+            
+            const emptyText = document.createElement('p');
+            emptyText.textContent = "Vous n'avez pas encore envoyé de messages.";
+            
+            const exploreLink = document.createElement('a');
+            exploreLink.href = '/browse';
+            exploreLink.className = 'cta-button';
+            exploreLink.textContent = 'Explorer et parler de vos jeux préfèrés';
+            
+            emptyState.appendChild(emptyText);
+            emptyState.appendChild(exploreLink);
+            messagesContainer.appendChild(emptyState);
             return;
         }
         
-      
         userMessages.forEach(message => {
             const messageCard = document.createElement('div');
             messageCard.className = 'message-card';
             
+            const messageHeader = document.createElement('div');
+            messageHeader.className = 'message-header';
+            
+            const messageGame = document.createElement('span');
+            messageGame.className = 'message-game';
+            messageGame.textContent = message.game.title;
+            
             const messageDate = new Date(message.created_at);
             const formattedDate = `${messageDate.toLocaleDateString()} à ${messageDate.toLocaleTimeString()}`;
             
-            messageCard.innerHTML = `
-                <div class="message-header">
-                    <span class="message-game">${message.game.title}</span>
-                    <span class="message-date">${formattedDate}</span>
-                </div>
-                <div class="message-content">${message.content}</div>
-            `;
+            const messageDateSpan = document.createElement('span');
+            messageDateSpan.className = 'message-date';
+            messageDateSpan.textContent = formattedDate;
+            
+            const messageContent = document.createElement('div');
+            messageContent.className = 'message-content';
+            messageContent.textContent = message.content;
+            
+            messageHeader.appendChild(messageGame);
+            messageHeader.appendChild(messageDateSpan);
+            messageCard.appendChild(messageHeader);
+            messageCard.appendChild(messageContent);
             
             messageCard.addEventListener('click', () => {
                 window.location.href = `/game/${message.game_id}#message-${message.message_id}`;
@@ -232,31 +273,11 @@ async function loadUserMessages() {
         
     } catch (error) {
         console.error('Erreur:', error);
-        purchasedGamesContainer.innerHTML = `
-            <div class="error">Erreur de chargement des jeux achetés</div>
-        `;
+        messagesContainer.replaceChildren();
+        
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'error';
+        errorDiv.textContent = 'Erreur de chargement des messages';
+        messagesContainer.appendChild(errorDiv);
     }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

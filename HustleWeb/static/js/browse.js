@@ -1,31 +1,34 @@
 document.addEventListener('DOMContentLoaded', function() {
-
     checkAuth(); 
-    
-
     loadGames();
     setupEventListeners();
 });
 
 function displayGames(featuredGames, gameCategories) {
     const featuredContainer = document.getElementById('featured-games-container');
-    featuredContainer.innerHTML = createGameCards(featuredGames, true);
+    featuredContainer.replaceChildren();
+    createGameCards(featuredGames, true).forEach(card => featuredContainer.appendChild(card));
     
     const categoriesContainer = document.getElementById('game-categories-container');
-    categoriesContainer.innerHTML = '';
+    categoriesContainer.replaceChildren();
     
     gameCategories.forEach(category => {
-        categoriesContainer.innerHTML += `
-            <div class="game-section">
-                <h2>${category.name}</h2>
-                <div class="game-row">
-                    ${createGameCards(category.games)}
-                </div>
-            </div>
-        `;
+        const gameSection = document.createElement('div');
+        gameSection.classList.add('game-section');
+        
+        const categoryTitle = document.createElement('h2');
+        categoryTitle.textContent = category.name;
+        
+        const gameRow = document.createElement('div');
+        gameRow.classList.add('game-row');
+        
+        createGameCards(category.games).forEach(card => gameRow.appendChild(card));
+        
+        gameSection.appendChild(categoryTitle);
+        gameSection.appendChild(gameRow);
+        categoriesContainer.appendChild(gameSection);
     });
     
-
     document.querySelectorAll('.game-card').forEach(card => {
         card.addEventListener('click', function() {
             const gameId = this.getAttribute('data-game-id');
@@ -49,7 +52,6 @@ function setupEventListeners() {
         });
     }
     
- 
     const genreFilter = document.getElementById('genre-filter');
     const platformFilter = document.getElementById('platform-filter');
     const sortBy = document.getElementById('sort-by');
@@ -60,7 +62,6 @@ function setupEventListeners() {
         sortBy.addEventListener('change', filterGames);
     }
     
- 
     const categoriesContainer = document.getElementById('game-categories-container');
     if (categoriesContainer) {
         categoriesContainer.addEventListener('click', function(e) {
@@ -77,29 +78,57 @@ function displaySearchResults(results, searchTerm) {
     document.querySelector('.featured-games').style.display = 'none';
     
     const categoriesContainer = document.getElementById('game-categories-container');
+    categoriesContainer.replaceChildren();
+    
+    const gameSection = document.createElement('div');
+    gameSection.classList.add('game-section');
+    
+    const title = document.createElement('h2');
     
     if (results.length === 0) {
-        categoriesContainer.innerHTML = `
-            <div class="game-section">
-                <h2>Search results for "${searchTerm}"</h2>
-                <div class="no-results">
-                    <h2>No games found</h2>
-                    <p>Try a different search term</p>
-                    <button id="reset-search" class="btn">Show All Games</button>
-                </div>
-            </div>
-        `;
+        title.textContent = `Search results for "${searchTerm}"`;
+        
+        const noResults = document.createElement('div');
+        noResults.classList.add('no-results');
+        
+        const noResultsTitle = document.createElement('h2');
+        noResultsTitle.textContent = 'No games found';
+        
+        const noResultsText = document.createElement('p');
+        noResultsText.textContent = 'Try a different search term';
+        
+        const resetButton = document.createElement('button');
+        resetButton.id = 'reset-search';
+        resetButton.classList.add('btn');
+        resetButton.textContent = 'Show All Games';
+        
+        noResults.appendChild(noResultsTitle);
+        noResults.appendChild(noResultsText);
+        noResults.appendChild(resetButton);
+        
+        gameSection.appendChild(title);
+        gameSection.appendChild(noResults);
     } else {
-        categoriesContainer.innerHTML = `
-            <div class="game-section">
-                <h2>Search results for "${searchTerm}" (${results.length} games found)</h2>
-                <div class="game-row">
-                    ${createGameCards(results)}
-                </div>
-                <button id="reset-search" class="btn" style="margin: 20px auto; display: block;">Show All Games</button>
-            </div>
-        `;
+        title.textContent = `Search results for "${searchTerm}" (${results.length} games found)`;
+        
+        const gameRow = document.createElement('div');
+        gameRow.classList.add('game-row');
+        
+        createGameCards(results).forEach(card => gameRow.appendChild(card));
+        
+        const resetButton = document.createElement('button');
+        resetButton.id = 'reset-search';
+        resetButton.classList.add('btn');
+        resetButton.style.margin = '20px auto';
+        resetButton.style.display = 'block';
+        resetButton.textContent = 'Show All Games';
+        
+        gameSection.appendChild(title);
+        gameSection.appendChild(gameRow);
+        gameSection.appendChild(resetButton);
     }
+    
+    categoriesContainer.appendChild(gameSection);
     
     document.getElementById('reset-search').addEventListener('click', function() {
         document.getElementById('game-search').value = '';
@@ -107,12 +136,10 @@ function displaySearchResults(results, searchTerm) {
     });
 }
 
-
 function loadGames() {
     console.log("All games data:", window.allGames);
     console.log("Game categories:", window.gameCategories);
     
-
     if (!window.allGames || !window.featuredGames || !window.gameCategories) {
         console.error("Game data not available. Make sure games-data.js is loaded correctly.");
         return;
@@ -130,25 +157,45 @@ function loadGames() {
 function createGameCards(games, featured = false) {
     if (!games || !Array.isArray(games) || games.length === 0) {
         console.warn("No games to display");
-        return "";
+        return [];
     }
     
     return games.map(game => {
-        const cardClass = featured ? 'game-card featured' : 'game-card';
-        const imageStyle = game.image 
-            ? `background-color: ${game.image}; background-size: cover;` 
-            : `background-color: #333;`;
-            
-        return `
-            <div class="${cardClass}" data-game-id="${game.game_id}">
-                <div class="game-image" style="${imageStyle}"></div>
-                <h3>${game.title}</h3>
-                <p>${game.category} | ${new Date(game.release_date).getFullYear()}</p>
-                <p>${game.platforms}</p>
-                <p class="game-price">$${game.price.toFixed(2)}</p>
-            </div>
-        `;
-    }).join('');
+        const gameCard = document.createElement('div');
+        gameCard.classList.add('game-card');
+        if (featured) gameCard.classList.add('featured');
+        gameCard.setAttribute('data-game-id', game.game_id);
+        
+        const gameImage = document.createElement('div');
+        gameImage.classList.add('game-image');
+        if (game.image) {
+            gameImage.style.backgroundColor = game.image;
+            gameImage.style.backgroundSize = 'cover';
+        } else {
+            gameImage.style.backgroundColor = '#333';
+        }
+        
+        const gameTitle = document.createElement('h3');
+        gameTitle.textContent = game.title;
+        
+        const gameInfo = document.createElement('p');
+        gameInfo.textContent = `${game.category} | ${new Date(game.release_date).getFullYear()}`;
+        
+        const gamePlatforms = document.createElement('p');
+        gamePlatforms.textContent = game.platforms;
+        
+        const gamePrice = document.createElement('p');
+        gamePrice.classList.add('game-price');
+        gamePrice.textContent = `$${game.price.toFixed(2)}`;
+        
+        gameCard.appendChild(gameImage);
+        gameCard.appendChild(gameTitle);
+        gameCard.appendChild(gameInfo);
+        gameCard.appendChild(gamePlatforms);
+        gameCard.appendChild(gamePrice);
+        
+        return gameCard;
+    });
 }
 
 function searchGames() {
@@ -187,7 +234,6 @@ function filterGames() {
         });
     }
     
-    // Sort results
     switch(sortBy) {
         case 'price_asc':
         case 'price':
@@ -203,7 +249,6 @@ function filterGames() {
             filtered.sort((a, b) => new Date(b.release_date) - new Date(a.release_date));
             break;
         default:
-            // Default to popularity (we can use rating as a proxy)
             filtered.sort((a, b) => b.rating_avg - a.rating_avg);
     }
     
@@ -214,24 +259,50 @@ function displayFilteredResults(filteredGames) {
     const categoriesContainer = document.getElementById('game-categories-container');
     document.querySelector('.featured-games').style.display = 'none';
     
+    categoriesContainer.replaceChildren();
+    
     if (filteredGames.length === 0) {
-        categoriesContainer.innerHTML = `
-            <div class="no-results">
-                <h2>No games found</h2>
-                <p>Try different filter options</p>
-                <button id="reset-filters" class="btn">Reset Filters</button>
-            </div>
-        `;
+        const noResults = document.createElement('div');
+        noResults.classList.add('no-results');
+        
+        const title = document.createElement('h2');
+        title.textContent = 'No games found';
+        
+        const message = document.createElement('p');
+        message.textContent = 'Try different filter options';
+        
+        const resetButton = document.createElement('button');
+        resetButton.id = 'reset-filters';
+        resetButton.classList.add('btn');
+        resetButton.textContent = 'Reset Filters';
+        
+        noResults.appendChild(title);
+        noResults.appendChild(message);
+        noResults.appendChild(resetButton);
+        categoriesContainer.appendChild(noResults);
     } else {
-        categoriesContainer.innerHTML = `
-            <div class="game-section">
-                <h2>Filtered Games (${filteredGames.length} results)</h2>
-                <div class="game-row">
-                    ${createGameCards(filteredGames)}
-                </div>
-                <button id="reset-filters" class="btn" style="margin: 20px auto; display: block;">Reset Filters</button>
-            </div>
-        `;
+        const gameSection = document.createElement('div');
+        gameSection.classList.add('game-section');
+        
+        const title = document.createElement('h2');
+        title.textContent = `Filtered Games (${filteredGames.length} results)`;
+        
+        const gameRow = document.createElement('div');
+        gameRow.classList.add('game-row');
+        
+        createGameCards(filteredGames).forEach(card => gameRow.appendChild(card));
+        
+        const resetButton = document.createElement('button');
+        resetButton.id = 'reset-filters';
+        resetButton.classList.add('btn');
+        resetButton.style.margin = '20px auto';
+        resetButton.style.display = 'block';
+        resetButton.textContent = 'Reset Filters';
+        
+        gameSection.appendChild(title);
+        gameSection.appendChild(gameRow);
+        gameSection.appendChild(resetButton);
+        categoriesContainer.appendChild(gameSection);
     }
     
     document.getElementById('reset-filters').addEventListener('click', function() {
